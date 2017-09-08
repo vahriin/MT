@@ -5,19 +5,35 @@ import (
 )
 
 type User struct {
-	id int64
-	nick string
+	Id int
+	Nick string
 }
 
+
+type PassUser struct {
+	Id int
+	Nick string
+	PassHash []byte
+}
+
+func (pu PassUser) ToUser() (User) {
+	return User{
+		Id: pu.Id,
+		Nick: pu.Nick,
+	}
+}
+
+
 type Subtransaction struct {
-	TransactionID int64
+	TransactionID int
 	Source User
 	Target User
 	Sum int
 }
 
+
 type Transaction struct {
-	Id int64
+	Id int
 	Datetime time.Time
 	Source User
 	Targets []User
