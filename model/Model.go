@@ -4,14 +4,16 @@ import (
 	"time"
 )
 
+type Id int
+
 type User struct {
-	Id int
+	Id Id
 	Nick string
 }
 
 
 type PassUser struct {
-	Id int
+	Id Id
 	Nick string
 	PassHash []byte
 }
@@ -25,7 +27,7 @@ func (pu PassUser) ToUser() (User) {
 
 
 type Subtransaction struct {
-	TransactionID int
+	TransactionID Id
 	Source User
 	Target User
 	Sum int
@@ -33,7 +35,7 @@ type Subtransaction struct {
 
 
 type Transaction struct {
-	Id int
+	Id Id
 	Datetime time.Time
 	Source User
 	Targets []User
