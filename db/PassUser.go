@@ -19,7 +19,6 @@ func (adb AppDB) AddPassUser(pu *model.PassUser) error {
 	return err
 }
 
-
 func (adb AppDB) GetPassUser(nick string) (*model.PassUser, error) {
 	row := adb.db.QueryRow("SELECT * FROM users WHERE nick=$1", nick)
 	passuser := new(model.PassUser)
@@ -33,7 +32,6 @@ func (adb AppDB) GetPassUser(nick string) (*model.PassUser, error) {
 	}
 	return passuser, nil
 }
-
 
 func (adb AppDB) DelPassUser(pu *model.PassUser) error {
 	_, err := adb.db.Exec("DELETE FROM users WHERE id=$1", pu.Id)

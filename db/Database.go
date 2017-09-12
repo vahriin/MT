@@ -1,16 +1,15 @@
 package db
 
 import (
-	_ "github.com/lib/pq"
 	"database/sql"
+	_ "github.com/lib/pq"
 	"log"
 )
 
-
 type AppDB struct {
 	db *sql.DB
+	//TODO: add cache (user, transactions, subtransactions) in the future
 }
-
 
 func InitDB(cfg string) (AppDB, error) {
 	db, err := sql.Open("postgres", cfg)
@@ -21,11 +20,11 @@ func InitDB(cfg string) (AppDB, error) {
 		log.Fatal(err)
 	}
 	createTables(db)
-	return AppDB{db}, nil
+	return AppDB{db: db}, nil
 }
 
-
 func createTables(db *sql.DB) {
+
 	createUsers := `
 
 	CREATE TABLE IF NOT EXISTS users (
@@ -34,14 +33,12 @@ func createTables(db *sql.DB) {
 	passhash varchar(64) NOT NULL
 	);`
 
-
 	createTransactions := `
 
 	CREATE TABLE IF NOT EXISTS transactions (
 	tr_id serial PRIMARY KEY,
 	date timestamp(0) without time zone NOT NULL,
 	source integer NOT NULL,
-	targets integer[] NOT NULL,
 	sum integer NOT NULL,
 	matter text NOT NULL,
 	comment text NOT NULL
@@ -71,12 +68,3 @@ func createTables(db *sql.DB) {
 		log.Fatal(err)
 	}
 }
-
-
-
-
-
-
-
-
-
