@@ -30,6 +30,7 @@ func createTables(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS users (
 	id serial PRIMARY KEY,
 	nick varchar(255) UNIQUE NOT NULL,
+	email varchar(255) UNIQUE NOT NULL,
 	passhash varchar(64) NOT NULL
 	);`
 

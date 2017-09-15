@@ -7,6 +7,7 @@ type User struct {
 
 type PassUser struct {
 	Id       Id
+	Email    string
 	Nick     string
 	PassHash []byte
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func (adb *AppDB) GetSubtransactionsOfTransactions(transaction *model.Transaction) ([]model.Subtransaction, error) {
-	rows, err := adb.db.Query("SELECT target, sum FROM subtransactions WHERE id=$1", transaction.Id)
+	rows, err := adb.db.Query("SELECT target, sum FROM subtransactions WHERE tr_id=$1", transaction.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (adb *AppDB) Difference(source *model.User, target *model.User) (int, error
 
 func addSubtransaction(tx *sql.Tx, subtransaction *model.Subtransaction) error {
 	_, err := tx.Exec(`
-	INSERT INTO subrtansactions(
+	INSERT INTO subtransactions(
 	tr_id,
 	source,
 	target,
@@ -80,7 +80,9 @@ func addSubtransaction(tx *sql.Tx, subtransaction *model.Subtransaction) error {
 }
 
 func (adb *AppDB) getTargetsOfTransaction(transactionDB *model.TransactionDB) ([]model.User, error) {
-	rows, err := adb.db.Query("SELECT target FROM subtransactions WHERE id=$1", transactionDB.Id)
+	rows, err := adb.db.Query(
+		"SELECT target FROM subtransactions WHERE tr_id=$1 AND target != source",
+		transactionDB.Id)
 	var targets []model.User
 	if err != nil {
 		return nil, err
@@ -94,7 +96,7 @@ func (adb *AppDB) getTargetsOfTransaction(transactionDB *model.TransactionDB) ([
 			return nil, err
 		}
 
-		target, err := adb.GetUserNick(id)
+		target, err := adb.GetUserById(id)
 		if err != nil {
 			return nil, err
 		}

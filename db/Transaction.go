@@ -16,6 +16,12 @@ func (adb *AppDB) AddTransaction(transaction *model.Transaction, proportion []in
 		return err
 	}
 
+	transaction.Id ,err = addTransactionDB(addTX, &transaction.TransactionDB)
+	if err != nil {
+		addTX.Rollback()
+		return err
+	}
+
 	for i, target := range transaction.Targets {
 		subtransaction.Sum = roundMoney(
 			float64(proportion[i]*transaction.Sum) / float64(sumProps))
@@ -38,12 +44,6 @@ func (adb *AppDB) AddTransaction(transaction *model.Transaction, proportion []in
 	subtransaction.TransactionId = transaction.Id
 
 	err = addSubtransaction(addTX, subtransaction)
-	if err != nil {
-		addTX.Rollback()
-		return err
-	}
-
-	err = addTransactionDB(addTX, &transaction.TransactionDB)
 	if err != nil {
 		addTX.Rollback()
 		return err
@@ -94,27 +94,38 @@ func (adb *AppDB) DeleteTransaction(transaction *model.Transaction) error {
 	return nil
 }
 
-func addTransactionDB(tx *sql.Tx, transaction *model.TransactionDB) error {
+func addTransactionDB(tx *sql.Tx, transaction *model.TransactionDB) (model.Id, error) {
 	_, err := tx.Exec(`
-	INSERT INTO transactions(
-	date,
-	source,
-	sum,
-	matter,
-	comment
-	) VALUES(
-	LOCALTIMESTAMP(0),
-	$1,
-	$2,
-	$3,
-	$4
-	);`,
+		INSERT INTO transactions(
+		date,
+		source,
+		sum,
+		matter,
+		comment
+		) VALUES(
+		LOCALTIMESTAMP(0),
+		$1,
+		$2,
+		$3,
+		$4
+		);`,
 		transaction.Source.Id,
 		transaction.Sum,
 		transaction.Matter,
 		transaction.Comment)
+	if err != nil {
+		return 0, err
+	}
 
-	return err
+	row := tx.QueryRow("SELECT MAX(tr_id) FROM transactions")
+
+	var tr_id model.Id
+	err = row.Scan(&tr_id)
+	if err != nil {
+		return 0, err
+	}
+
+	return tr_id, nil
 }
 
 func (adb *AppDB) getTransactionsDB(source *model.User) ([]model.TransactionDB, error) {
