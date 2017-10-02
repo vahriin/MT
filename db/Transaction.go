@@ -117,15 +117,15 @@ func addTransactionDB(tx *sql.Tx, transaction *model.TransactionDB) (model.Id, e
 		return 0, err
 	}
 
-	row := tx.QueryRow("SELECT MAX(tr_id) FROM transactions")
+	row := tx.QueryRow("SELECT MAX(trId) FROM transactions")
 
-	var tr_id model.Id
-	err = row.Scan(&tr_id)
+	var trId model.Id
+	err = row.Scan(&trId)
 	if err != nil {
 		return 0, err
 	}
 
-	return tr_id, nil
+	return trId, nil
 }
 
 func (adb *AppDB) getTransactionsDB(source *model.User) ([]model.TransactionDB, error) {

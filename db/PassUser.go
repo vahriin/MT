@@ -19,10 +19,10 @@ func (adb *AppDB) AddPassUser(pu *model.PassUser) error {
 	return err
 }
 
-func (adb *AppDB) GetPassUser(nick string) (*model.PassUser, error) {
-	row := adb.db.QueryRow("SELECT * FROM users WHERE nick=$1", nick)
+func (adb *AppDB) GetPassUser(email string) (*model.PassUser, error) {
+	row := adb.db.QueryRow("SELECT id, email, nick, passhash FROM users WHERE nick=$1", email)
 	passuser := new(model.PassUser)
-	if err := row.Scan(&passuser.Id, &passuser.Nick, &passuser.Email, &passuser.PassHash); err != nil {
+	if err := row.Scan(&passuser.Id, &passuser.Email, &passuser.Nick, &passuser.PassHash); err != nil {
 		switch {
 		case err == sql.ErrNoRows:
 			return nil, errors.New("no user in DB")
