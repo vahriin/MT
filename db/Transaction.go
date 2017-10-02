@@ -5,29 +5,30 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
-func (adb *AppDB) AddTransaction(transaction *model.Transaction, proportion []int) error {
-	sumProps := sumProportions(&proportion)
-
-	var sumSubs int
-	subtransaction := new(model.Subtransaction)
+func (adb *AppDB) AddTransaction(inputTransaction *model.InputTransaction) error {
+	sumProps := inputTransaction.SumProportions()
 
 	addTX, err := adb.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	transaction.Id ,err = addTransactionDB(addTX, &transaction.TransactionDB)
+	transactionId, err := addTransaction(addTX, inputTransaction)
 	if err != nil {
 		addTX.Rollback()
 		return err
 	}
 
-	for i, target := range transaction.Targets {
+	subtransaction := new(model.Subtransaction)
+	var sumSubs int
+
+	for i, target := range inputTransaction.Targets {
+		subtransaction.Proportion = inputTransaction.Proportions[i]
 		subtransaction.Sum = roundMoney(
-			float64(proportion[i]*transaction.Sum) / float64(sumProps))
+			float64(subtransaction.Proportion*inputTransaction.Sum) / float64(sumProps))
 		subtransaction.Target = target
-		subtransaction.Source = transaction.Source
-		subtransaction.TransactionId = transaction.Id
+		subtransaction.Source = inputTransaction.Source
+		subtransaction.TransactionId = transactionId
 
 		err := addSubtransaction(addTX, subtransaction)
 		if err != nil {
@@ -38,10 +39,11 @@ func (adb *AppDB) AddTransaction(transaction *model.Transaction, proportion []in
 		sumSubs += subtransaction.Sum
 	}
 
-	subtransaction.Sum = transaction.Sum - sumSubs
-	subtransaction.Source = transaction.Source
-	subtransaction.Target = transaction.Source //transactions "to oneself"
-	subtransaction.TransactionId = transaction.Id
+	subtransaction.Proportion = inputTransaction.Proportions[len(inputTransaction.Proportions) - 1]
+	subtransaction.Sum = inputTransaction.Sum - sumSubs
+	subtransaction.Source = inputTransaction.Source
+	subtransaction.Target = inputTransaction.Source //transactions "to oneself"
+	subtransaction.TransactionId = transactionId
 
 	err = addSubtransaction(addTX, subtransaction)
 	if err != nil {
@@ -53,24 +55,7 @@ func (adb *AppDB) AddTransaction(transaction *model.Transaction, proportion []in
 	return nil
 }
 
-func (adb *AppDB) GetTransactionsBySource(source *model.User) ([]model.Transaction, error) {
-	var transactions []model.Transaction
-	transactionsDB, err := adb.getTransactionsDB(source)
-	if err != nil {
-		return nil, err
-	}
-	for _, transactionDB := range transactionsDB {
-		var transaction model.Transaction
-		transaction.TransactionDB = transactionDB
-		transaction.Targets, err = adb.getTargetsOfTransaction(&transactionDB)
-		if err != nil {
-			return nil, err
-		}
 
-		transactions = append(transactions, transaction)
-	}
-	return transactions, err
-}
 
 func (adb *AppDB) DeleteTransaction(transaction *model.Transaction) error {
 	delTX, err := adb.db.Begin()
@@ -78,13 +63,13 @@ func (adb *AppDB) DeleteTransaction(transaction *model.Transaction) error {
 		return err
 	}
 
-	err = deleteTransactionsDB(delTX, &transaction.TransactionDB)
+	err = deleteTransactionById(delTX, transaction.Id)
 	if err != nil {
 		delTX.Rollback()
 		return err
 	}
 
-	err = deleteSubtransactionsPack(delTX, &transaction.TransactionDB)
+	err = deleteSubtransactionsPack(delTX, transaction.Id)
 	if err != nil {
 		delTX.Rollback()
 		return err
@@ -94,7 +79,7 @@ func (adb *AppDB) DeleteTransaction(transaction *model.Transaction) error {
 	return nil
 }
 
-func addTransactionDB(tx *sql.Tx, transaction *model.TransactionDB) (model.Id, error) {
+func addTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (model.Id, error) {
 	_, err := tx.Exec(`
 		INSERT INTO transactions(
 		date,
@@ -109,10 +94,10 @@ func addTransactionDB(tx *sql.Tx, transaction *model.TransactionDB) (model.Id, e
 		$3,
 		$4
 		);`,
-		transaction.Source.Id,
-		transaction.Sum,
-		transaction.Matter,
-		transaction.Comment)
+		inputTransaction.Source.Id,
+		inputTransaction.Sum,
+		inputTransaction.Matter,
+		inputTransaction.Comment)
 	if err != nil {
 		return 0, err
 	}
@@ -128,18 +113,18 @@ func addTransactionDB(tx *sql.Tx, transaction *model.TransactionDB) (model.Id, e
 	return trId, nil
 }
 
-func (adb *AppDB) getTransactionsDB(source *model.User) ([]model.TransactionDB, error) {
-	var transactionsOfUser []model.TransactionDB
+func (adb *AppDB) getTransactionsByUserId(sourceId model.Id) ([]model.Transaction, error) {
+	var transactionsOfUser []model.Transaction
 
 	rows, err := adb.db.Query(`SELECT tr_id, date, sum, matter, comment
-		FROM transactions WHERE source=$1`, source.Id)
+		FROM transactions WHERE source=$1`, sourceId)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var currentTransaction model.TransactionDB
+		var currentTransaction model.Transaction
 
 		err = rows.Scan(
 			&currentTransaction.Id,
@@ -152,24 +137,16 @@ func (adb *AppDB) getTransactionsDB(source *model.User) ([]model.TransactionDB, 
 			return nil, err
 		}
 
-		currentTransaction.Source = *source
+		currentTransaction.Source, err = adb.GetUserById(sourceId)
 
 		transactionsOfUser = append(transactionsOfUser, currentTransaction)
 	}
 	return transactionsOfUser, nil
 }
 
-func deleteTransactionsDB(tx *sql.Tx, transaction *model.TransactionDB) error {
-	_, err := tx.Exec("DELETE FROM transactions WHERE tr_id=$1", transaction.Id)
+func deleteTransactionById(tx *sql.Tx, id model.Id) error {
+	_, err := tx.Exec("DELETE FROM transactions WHERE tr_id=$1", id)
 	return err
-}
-
-func sumProportions(proportions *[]int) int {
-	var sum int
-	for _, proportion := range *proportions {
-		sum += proportion
-	}
-	return sum
 }
 
 func roundMoney(val float64) int {

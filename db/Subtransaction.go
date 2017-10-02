@@ -6,7 +6,7 @@ import (
 )
 
 func (adb *AppDB) GetSubtransactionsOfTransactions(transaction *model.Transaction) ([]model.Subtransaction, error) {
-	rows, err := adb.db.Query("SELECT target, sum FROM subtransactions WHERE tr_id=$1", transaction.Id)
+	rows, err := adb.db.Query("SELECT target, sum, proportion FROM subtransactions WHERE tr_id=$1", transaction.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -20,15 +20,15 @@ func (adb *AppDB) GetSubtransactionsOfTransactions(transaction *model.Transactio
 		err := rows.Scan(
 			&targetId,
 			&subtransaction.Sum,
+			&subtransaction.Proportion,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, target := range transaction.Targets {
-			if target.Id == targetId {
-				subtransaction.Target = target
-			}
+		subtransaction.Target, err = adb.GetUserById(targetId)
+		if err != nil {
+			return nil, err
 		}
 
 		subtransaction.TransactionId = transaction.Id
@@ -67,46 +67,21 @@ func addSubtransaction(tx *sql.Tx, subtransaction *model.Subtransaction) error {
 	tr_id,
 	source,
 	target,
-	sum
+	sum,
+	proportion
 	) VALUES(
-	$1, $2, $3, $4)`,
+	$1, $2, $3, $4, $5)`,
 		subtransaction.TransactionId,
 		subtransaction.Source.Id,
 		subtransaction.Target.Id,
 		subtransaction.Sum,
+		subtransaction.Proportion,
 	)
 
 	return err
 }
 
-func (adb *AppDB) getTargetsOfTransaction(transactionDB *model.TransactionDB) ([]model.User, error) {
-	rows, err := adb.db.Query(
-		"SELECT target FROM subtransactions WHERE tr_id=$1 AND target != source",
-		transactionDB.Id)
-	var targets []model.User
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		var id model.Id
-
-		err = rows.Scan(&id)
-		if err != nil {
-			return nil, err
-		}
-
-		target, err := adb.GetUserById(id)
-		if err != nil {
-			return nil, err
-		}
-
-		targets = append(targets, *target)
-	}
-	return targets, nil
-}
-
-func deleteSubtransactionsPack(tx *sql.Tx, transaction *model.TransactionDB) error {
-	_, err := tx.Exec("DELETE FROM subtransactions WHERE tr_id=$1", transaction.Id)
+func deleteSubtransactionsPack(tx *sql.Tx, transactionId model.Id) error {
+	_, err := tx.Exec("DELETE FROM subtransactions WHERE tr_id=$1", transactionId)
 	return err
 }

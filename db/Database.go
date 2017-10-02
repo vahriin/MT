@@ -51,7 +51,8 @@ func createTables(db *sql.DB) {
 	tr_id integer NOT NULL,
 	source integer NOT NULL,
 	target integer NOT NULL,
-	sum integer NOT NULL
+	sum integer NOT NULL,
+	proportion integer NOT NULL
 	);`
 
 	_, err := db.Exec(createUsers)

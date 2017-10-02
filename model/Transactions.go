@@ -7,9 +7,10 @@ type Subtransaction struct {
 	Source        User
 	Target        User
 	Sum           int
+	Proportion    int
 }
 
-type TransactionDB struct {
+type Transaction struct {
 	Id      Id
 	Date    time.Time
 	Source  User
@@ -18,7 +19,23 @@ type TransactionDB struct {
 	Comment string
 }
 
-type Transaction struct {
-	TransactionDB
-	Targets []User //contains only targets, without a source
+type InputTransaction struct {
+	Source      User
+	Sum         int
+	Matter      string
+	Comment     string
+	Targets     []User
+	Proportions []int
+}
+
+func (it InputTransaction) SumProportions() int {
+	if it.Proportions != nil {
+		var sum int
+		for _, proportion := range it.Proportions {
+			sum += proportion
+		}
+		return sum
+	} else {
+		return len(it.Targets)
+	}
 }

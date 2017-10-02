@@ -117,7 +117,7 @@ func TestTransactions(t *testing.T) {
 	alex, _ := db.GetUserByNick("Alex")
 
 	transact0 := model.Transaction{
-		TransactionDB: model.TransactionDB{
+		Transaction: model.Transaction{
 			Id: 0,
 			Date: time.Now(),
 			Source: *gleb,
@@ -132,7 +132,7 @@ func TestTransactions(t *testing.T) {
 
 
 	transact1 := model.Transaction{
-		TransactionDB: model.TransactionDB{
+		Transaction: model.Transaction{
 			Id: 0,
 			Date: time.Now(),
 			Source: *andrew,
