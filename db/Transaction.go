@@ -5,7 +5,7 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
-func (adb *AppDB) AddTransaction(inputTransaction *model.InputTransaction) error {
+func (adb AppDB) AddTransaction(inputTransaction *model.InputTransaction) error {
 	sumProps := inputTransaction.SumProportions()
 
 	addTX, err := adb.db.Begin()
@@ -57,7 +57,7 @@ func (adb *AppDB) AddTransaction(inputTransaction *model.InputTransaction) error
 
 
 
-func (adb *AppDB) DeleteTransaction(transaction *model.Transaction) error {
+func (adb AppDB) DeleteTransaction(transaction *model.Transaction) error {
 	delTX, err := adb.db.Begin()
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ func addTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (model
 	return trId, nil
 }
 
-func (adb *AppDB) getTransactionsByUserId(sourceId model.Id) ([]model.Transaction, error) {
+func (adb AppDB) getTransactionsByUserId(sourceId model.Id) ([]model.Transaction, error) {
 	var transactionsOfUser []model.Transaction
 
 	rows, err := adb.db.Query(`SELECT tr_id, date, sum, matter, comment

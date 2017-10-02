@@ -6,7 +6,7 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
-func (adb *AppDB) GetUserById(id model.Id) (model.User, error) {
+func (adb AppDB) GetUserById(id model.Id) (model.User, error) {
 	row := adb.db.QueryRow("SELECT nick FROM users WHERE id=$1", id)
 	var user model.User
 	user.Id = id
@@ -21,7 +21,7 @@ func (adb *AppDB) GetUserById(id model.Id) (model.User, error) {
 	return user, nil
 }
 
-func (adb *AppDB) GetUserByEmail(email string) (model.User, error) {
+func (adb AppDB) GetUserByEmail(email string) (model.User, error) {
 	row := adb.db.QueryRow("SELECT id, nick FROM users WHERE email=$1", email)
 	var user model.User
 	if err := row.Scan(&user.Id, &user.Nick); err != nil {

@@ -6,7 +6,7 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
-func (adb *AppDB) AddPassUser(pu *model.PassUser) error {
+func (adb AppDB) AddPassUser(pu *model.PassUser) error {
 	row := adb.db.QueryRow("SELECT id FROM users WHERE nick=$1", pu.Nick)
 	var err error
 	if row.Scan(&pu.Id) == sql.ErrNoRows {
@@ -19,7 +19,7 @@ func (adb *AppDB) AddPassUser(pu *model.PassUser) error {
 	return err
 }
 
-func (adb *AppDB) GetPassUser(email string) (*model.PassUser, error) {
+func (adb AppDB) GetPassUser(email string) (*model.PassUser, error) {
 	row := adb.db.QueryRow("SELECT id, email, nick, passhash FROM users WHERE nick=$1", email)
 	passuser := new(model.PassUser)
 	if err := row.Scan(&passuser.Id, &passuser.Email, &passuser.Nick, &passuser.PassHash); err != nil {
@@ -33,7 +33,7 @@ func (adb *AppDB) GetPassUser(email string) (*model.PassUser, error) {
 	return passuser, nil
 }
 
-func (adb *AppDB) DeletePassUser(pu *model.PassUser) error {
+func (adb AppDB) DeletePassUser(pu *model.PassUser) error {
 	_, err := adb.db.Exec("DELETE FROM users WHERE id=$1", pu.Id)
 	return err
 }

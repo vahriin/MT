@@ -5,7 +5,7 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
-func (adb *AppDB) GetSubtransactionsOfTransactions(transaction *model.Transaction) ([]model.Subtransaction, error) {
+func (adb AppDB) GetSubtransactionsOfTransactions(transaction *model.Transaction) ([]model.Subtransaction, error) {
 	rows, err := adb.db.Query("SELECT target, sum, proportion FROM subtransactions WHERE tr_id=$1", transaction.Id)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (adb *AppDB) GetSubtransactionsOfTransactions(transaction *model.Transactio
 	return subtransactions, nil
 }
 
-func (adb *AppDB) Difference(source *model.User, target *model.User) (int, error) {
+func (adb AppDB) Difference(source *model.User, target *model.User) (int, error) {
 	row := adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
 		source.Id, target.Id)
 

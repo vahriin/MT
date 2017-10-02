@@ -8,10 +8,30 @@ import (
 
 type AppDB struct {
 	db *sql.DB
-	//TODO: add cache (user, transactions, subtransactions) in the future
 }
 
-func InitDB(cfg string) (AppDB, error) {
+type CacheDB struct {
+	adb AppDB
+	//TODO: add cache (user, transactions, subtransactions) pointer in the future
+}
+
+func InitDB(cfg string) (CacheDB, error) {
+	var cdb CacheDB
+	var err error
+
+	/* parse cfg string, split to dbCfg and CacheCfg */
+	dbCfg := cfg //temp
+	cdb.adb, err = InitAppDB(dbCfg)
+	if err != nil {
+		return cdb, err
+	}
+
+	/*init cache*/
+
+	return cdb, nil
+}
+
+func InitAppDB(cfg string) (AppDB, error) {
 	db, err := sql.Open("postgres", cfg)
 	if err != nil {
 		log.Fatal(err)
