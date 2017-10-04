@@ -13,7 +13,7 @@ import (
 func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.Method == http.MethodGet {
-			first, amount, err := getParseForm(req)
+			first, amount, err := getTransactionsParsedForm(req)
 			if err != nil {
 				http.Error(rw, "400 " +
 					http.StatusText(http.StatusBadRequest) + "\n" +
@@ -27,12 +27,17 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 			err = encoder.Encode(transactions)
 			rw.Header().Set("Content-Type", "application/json")
 			if err != nil {
-				http.Error(rw, "500" + http.StatusText(http.StatusInternalServerError),
+				http.Error(rw, "500 " + http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 				return
 			}
 		} else if req.Method == http.MethodPost {
 			/* TODO: Add processing of Content-Type type (block non-JSON) */
+			if err := blockNoJSON(req); err != nil {
+				http.Error(rw, "400 " + http.StatusText(http.StatusBadRequest) +
+					"\n" + err.Error(), http.StatusBadRequest)
+					return
+			}
 
 			inputTransaction := new(model.InputTransaction)
 
@@ -40,7 +45,7 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 			err := decoder.Decode(inputTransaction)
 			if err != nil {
 				fmt.Fprintln(rw, err)
-				http.Error(rw, "500" + http.StatusText(http.StatusInternalServerError),
+				http.Error(rw, "500 " + http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 				return
 			}
@@ -62,7 +67,7 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 	})
 }
 
-func getParseForm(req *http.Request) (int, int, error) {
+func getTransactionsParsedForm(req *http.Request) (int, int, error) {
 	req.ParseForm()
 
 	form1, ok := req.Form["first"]
@@ -75,9 +80,28 @@ func getParseForm(req *http.Request) (int, int, error) {
 		return 0, 0, errors.New("\"amount\" parameter not found")
 	}
 
-	/* TODO: add error processing */
-	first, _ := strconv.ParseInt(form1[0], 10, 32)
-	amount, _ := strconv.ParseInt(form2[0], 10, 32)
+	first, err := strconv.ParseInt(form1[0], 10, 32)
+	if err != nil {
+		return 0, 0, errors.New("No number in \"first\"")
+	}
+
+	amount, err := strconv.ParseInt(form2[0], 10, 32)
+	if err != nil {
+		return 0, 0, errors.New("No number in \"amount\"")
+	}
 
 	return int(first), int(amount), nil
+}
+
+func blockNoJSON(req *http.Request) error {
+	req.ParseForm()
+	if cType, ok := req.Form["Content-Type"]; ok {
+		if cType[0] == "application/json" {
+			return nil
+		} else {
+			return errors.New("Content-Type is not JSON")
+		}
+	} else {
+		return errors.New("No Content-Type in header")
+	}
 }
