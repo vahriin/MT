@@ -5,11 +5,25 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
-func (adb AppDB) GetSubtransactionsOfTransactions(transaction *model.Transaction) ([]model.Subtransaction, error) {
-	rows, err := adb.db.Query("SELECT target, sum, proportion FROM subtransactions WHERE tr_id=$1", transaction.Id)
+func (adb AppDB) getSubtransactionsByIdFromDB(transactionId model.Id) ([]model.Subtransaction, error) {
+	row := adb.db.QueryRow("SELECT DISTINCT source FROM subtransactions WHERE tr_id=$1", transactionId)
+	var sourceId model.Id
+	err := row.Scan(&sourceId)
 	if err != nil {
 		return nil, err
 	}
+
+	source, err := adb.getUserById(sourceId) //temp
+	if err != nil {
+		return nil, err
+	}
+
+
+	rows, err := adb.db.Query("SELECT target, sum, proportion FROM subtransactions WHERE tr_id=$1", transactionId)
+	if err != nil {
+		return nil, err
+	}
+
 
 	var subtransactions []model.Subtransaction
 
@@ -26,21 +40,21 @@ func (adb AppDB) GetSubtransactionsOfTransactions(transaction *model.Transaction
 			return nil, err
 		}
 
-		subtransaction.Target, err = adb.GetUserById(targetId)
+		subtransaction.Target, err = adb.getUserById(targetId)
 		if err != nil {
 			return nil, err
 		}
 
-		subtransaction.TransactionId = transaction.Id
-		subtransaction.Source = transaction.Source
+		subtransaction.TransactionId = transactionId
+		subtransaction.Source = source
 
 		subtransactions = append(subtransactions, subtransaction)
 	}
 	return subtransactions, nil
 }
 
-func (adb AppDB) Difference(source *model.User, target *model.User) (int, error) {
-	row := adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
+func (cdb CacheDB) Difference(source *model.User, target *model.User) (int, error) {
+	row := cdb.adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
 		source.Id, target.Id)
 
 	var sumSource int
@@ -49,7 +63,7 @@ func (adb AppDB) Difference(source *model.User, target *model.User) (int, error)
 		return 0, err
 	}
 
-	row = adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
+	row = cdb.adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
 		target.Id, source.Id)
 
 	var sumTarget int

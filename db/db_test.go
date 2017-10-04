@@ -1,6 +1,6 @@
 package db
 
-import (
+/*import (
 	"testing"
 	"github.com/vahriin/MT/model"
 	"time"
@@ -67,7 +67,7 @@ var config string = "user=vahriin dbname=MT_DB sslmode=disable"
 }*/
 
 
-func initUser(db AppDB) {
+/*func initUser(db AppDB) {
 
 	gleb := model.PassUser{
 		Id: 0,
@@ -169,4 +169,4 @@ func TestTransactions(t *testing.T) {
 	_ = db.DeleteTransaction(&transact01[0])
 	_ = db.DeleteTransaction(&transact11[0])
 }
-
+*/

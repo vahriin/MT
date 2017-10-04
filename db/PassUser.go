@@ -6,6 +6,7 @@ import (
 	"github.com/vahriin/MT/model"
 )
 
+/* change this for OAuth */
 func (adb AppDB) AddPassUser(pu *model.PassUser) error {
 	row := adb.db.QueryRow("SELECT id FROM users WHERE nick=$1", pu.Nick)
 	var err error

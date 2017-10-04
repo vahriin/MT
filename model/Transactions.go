@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"time"
+	"fmt"
+)
 
 type Subtransaction struct {
 	TransactionId Id
@@ -28,14 +31,20 @@ type InputTransaction struct {
 	Proportions []int
 }
 
-func (it InputTransaction) SumProportions() int {
-	if it.Proportions != nil {
+// shit
+func (it *InputTransaction) SumProportions() int {
+	if len(it.Proportions) != 0 {
+		fmt.Println(it.Proportions)
 		var sum int
 		for _, proportion := range it.Proportions {
 			sum += proportion
 		}
 		return sum
 	} else {
+		for i := 0; i < len(it.Targets); i++ {
+			it.Proportions = append(it.Proportions, 1)
+		}
+		fmt.Println(it.Proportions)
 		return len(it.Targets)
 	}
 }
