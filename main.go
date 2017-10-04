@@ -12,5 +12,6 @@ func main() {
 	server := http.Server{Addr: "127.0.0.1:4000"}
 	appDb, _ := db.InitDB(config)
 	http.Handle("/transactions", api.TransactionsHandler(&appDb))
+	http.Handle("/transaction", api.TransactionHandler(&appDb))
 	server.ListenAndServe()
 }

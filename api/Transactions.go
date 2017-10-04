@@ -15,26 +15,26 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 		if req.Method == http.MethodGet {
 			first, amount, err := getTransactionsParsedForm(req)
 			if err != nil {
-				http.Error(rw, "400 " +
-					http.StatusText(http.StatusBadRequest) + "\n" +
+				http.Error(rw, http.StatusText(http.StatusBadRequest) + "\n" +
 						err.Error(), http.StatusBadRequest)
 				return
 			}
 
 			transactions, _ := cdb.GetTransactions(amount, first)
 
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusOK)
+
 			encoder := json.NewEncoder(rw)
 			err = encoder.Encode(transactions)
-			rw.Header().Set("Content-Type", "application/json")
 			if err != nil {
-				http.Error(rw, "500 " + http.StatusText(http.StatusInternalServerError),
+				http.Error(rw, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 				return
 			}
 		} else if req.Method == http.MethodPost {
-			/* TODO: Add processing of Content-Type type (block non-JSON) */
 			if err := blockNoJSON(req); err != nil {
-				http.Error(rw, "400 " + http.StatusText(http.StatusBadRequest) +
+				http.Error(rw, http.StatusText(http.StatusBadRequest) +
 					"\n" + err.Error(), http.StatusBadRequest)
 					return
 			}
@@ -45,7 +45,7 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 			err := decoder.Decode(inputTransaction)
 			if err != nil {
 				fmt.Fprintln(rw, err)
-				http.Error(rw, "500 " + http.StatusText(http.StatusInternalServerError),
+				http.Error(rw, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 				return
 			}
@@ -53,14 +53,14 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 			err = cdb.AddTransaction(inputTransaction)
 			if err != nil {
 				fmt.Fprintln(rw, err)
-				http.Error(rw, "500" + http.StatusText(http.StatusInternalServerError),
+				http.Error(rw, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 				return
 			}
 
 			rw.WriteHeader(http.StatusCreated)
 		} else {
-			http.Error(rw, "400 " + http.StatusText(http.StatusBadRequest) +
+			http.Error(rw, http.StatusText(http.StatusBadRequest) +
 				"\nSupported only POST and GET", http.StatusBadRequest)
 				return
 		}
