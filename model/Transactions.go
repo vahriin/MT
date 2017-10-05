@@ -13,7 +13,7 @@ type Subtransaction struct {
 	Proportion    int
 }
 
-type Transaction struct {
+type MainTransaction struct {
 	Id      Id
 	Date    time.Time
 	Source  Id
