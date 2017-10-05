@@ -14,11 +14,6 @@ func (adb AppDB) getSubtransactionsById(transactionId model.Id) ([]model.Subtran
 		return nil, ErrNotFound
 	}
 
-	source, err := adb.getUserById(sourceId) //temp
-	if err != nil {
-		return nil, ErrNotFound
-	}
-
 	rows, err := adb.db.Query("SELECT target, sum, proportion FROM subtransactions WHERE tr_id=$1", transactionId)
 	if err != nil {
 		log.Println("getSubtransactionsById returned this message: " + err.Error())
@@ -30,10 +25,9 @@ func (adb AppDB) getSubtransactionsById(transactionId model.Id) ([]model.Subtran
 
 	for rows.Next() {
 		var subtransaction model.Subtransaction
-		var targetId model.Id
 
 		err := rows.Scan(
-			&targetId,
+			&subtransaction.Target,
 			&subtransaction.Sum,
 			&subtransaction.Proportion,
 		)
@@ -42,14 +36,13 @@ func (adb AppDB) getSubtransactionsById(transactionId model.Id) ([]model.Subtran
 			return nil, ErrInternal
 		}
 
-		subtransaction.Target, err = adb.getUserById(targetId)
 		if err != nil {
 			log.Println("getSubtransactionsById returned this message: " + err.Error())
 			return nil, ErrInternal
 		}
 
 		subtransaction.TransactionId = transactionId
-		subtransaction.Source = source
+		subtransaction.Source = sourceId
 
 		subtransactions = append(subtransactions, subtransaction)
 	}
@@ -91,8 +84,8 @@ func addSubtransaction(tx *sql.Tx, subtransaction *model.Subtransaction) error {
 	) VALUES(
 	$1, $2, $3, $4, $5)`,
 		subtransaction.TransactionId,
-		subtransaction.Source.Id,
-		subtransaction.Target.Id,
+		subtransaction.Source,
+		subtransaction.Target,
 		subtransaction.Sum,
 		subtransaction.Proportion,
 	)

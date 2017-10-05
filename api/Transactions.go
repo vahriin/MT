@@ -1,13 +1,13 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/vahriin/MT/db"
+	"github.com/vahriin/MT/model"
 	"net/http"
 	"strconv"
-	"github.com/vahriin/MT/db"
-	"errors"
-	"encoding/json"
-	"github.com/vahriin/MT/model"
-	"fmt"
 )
 
 func TransactionsHandler(cdb *db.CacheDB) http.Handler {
@@ -15,8 +15,8 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 		if req.Method == http.MethodGet {
 			first, amount, err := getTransactionsParsedForm(req)
 			if err != nil {
-				http.Error(rw, http.StatusText(http.StatusBadRequest) + "\n" +
-						err.Error(), http.StatusBadRequest)
+				http.Error(rw, http.StatusText(http.StatusBadRequest)+"\n"+
+					err.Error(), http.StatusBadRequest)
 				return
 			}
 
@@ -34,9 +34,9 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 			}
 		} else if req.Method == http.MethodPost {
 			if err := blockNoJSON(req); err != nil {
-				http.Error(rw, http.StatusText(http.StatusBadRequest) +
-					"\n" + err.Error(), http.StatusBadRequest)
-					return
+				http.Error(rw, http.StatusText(http.StatusBadRequest)+
+					"\n"+err.Error(), http.StatusBadRequest)
+				return
 			}
 
 			inputTransaction := new(model.InputTransaction)
@@ -60,9 +60,9 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 
 			rw.WriteHeader(http.StatusCreated)
 		} else {
-			http.Error(rw, http.StatusText(http.StatusBadRequest) +
+			http.Error(rw, http.StatusText(http.StatusBadRequest)+
 				"\nSupported only POST and GET", http.StatusBadRequest)
-				return
+			return
 		}
 	})
 }
@@ -82,12 +82,12 @@ func getTransactionsParsedForm(req *http.Request) (int, int, error) {
 
 	first, err := strconv.ParseInt(form1[0], 10, 32)
 	if err != nil {
-		return 0, 0, errors.New("No number in \"first\"")
+		return 0, 0, errors.New("No number in \"first\" ")
 	}
 
 	amount, err := strconv.ParseInt(form2[0], 10, 32)
 	if err != nil {
-		return 0, 0, errors.New("No number in \"amount\"")
+		return 0, 0, errors.New("No number in \"amount\" ")
 	}
 
 	return int(first), int(amount), nil
@@ -102,6 +102,6 @@ func blockNoJSON(req *http.Request) error {
 			return errors.New("Content-Type is not JSON")
 		}
 	} else {
-		return errors.New("No Content-Type in header")
+		return errors.New("no Content-Type in header")
 	}
 }

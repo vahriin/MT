@@ -7,8 +7,8 @@ import (
 
 type Subtransaction struct {
 	TransactionId Id
-	Source        User
-	Target        User
+	Source        Id
+	Target        Id
 	Sum           int
 	Proportion    int
 }
@@ -16,18 +16,18 @@ type Subtransaction struct {
 type Transaction struct {
 	Id      Id
 	Date    time.Time
-	Source  User
+	Source  Id
 	Sum     int
 	Matter  string
 	Comment string
 }
 
 type InputTransaction struct {
-	Source      User
+	Source      Id
 	Sum         int
 	Matter      string
 	Comment     string
-	Targets     []User
+	Targets     []Id
 	Proportions []int
 }
 

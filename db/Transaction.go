@@ -47,6 +47,8 @@ func (cdb CacheDB) DeleteTransactionById(transactionId model.Id) error {
 	return nil
 }
 
+/* ------------------------------------------------------------------------------*/
+
 func (adb AppDB) addTransaction(inputTransaction *model.InputTransaction) error {
 	sumProps := inputTransaction.SumProportions()
 
@@ -108,26 +110,28 @@ func (adb AppDB) getTransactionsPack(limit int, offset int) ([]model.Transaction
 		log.Println("getTransactionsPack returned this message: " + err.Error())
 		return nil, ErrInternal
 	}
+	defer rows.Close()
 
 	var transactions []model.Transaction
 
 	for rows.Next() {
 		var transaction model.Transaction
-		var source model.Id
 
 		err := rows.Scan(&transaction.Id,
 			&transaction.Date,
-			&source,
+			&transaction.Source,
 			&transaction.Sum,
 			&transaction.Matter,
 			&transaction.Comment)
 
 		if err != nil {
-			log.Println("getTransactionsPack returned this message: " + err.Error())
-			return nil, ErrInternal
+			if err == sql.ErrNoRows {
+				return nil, ErrNotFound
+			} else {
+				log.Println("getTransactionsPack returned this message: " + err.Error())
+				return nil, ErrInternal
+			}
 		}
-
-		transaction.Source, err = adb.getUserById(source)
 
 		transactions = append(transactions, transaction)
 	}
@@ -173,7 +177,7 @@ func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (m
 		$3,
 		$4
 		);`,
-		inputTransaction.Source.Id,
+		inputTransaction.Source,
 		inputTransaction.Sum,
 		inputTransaction.Matter,
 		inputTransaction.Comment)
@@ -203,7 +207,7 @@ func (adb AppDB) getTransactionsByUserId(sourceId model.Id) ([]model.Transaction
 		FROM transactions WHERE source=$1`, sourceId)
 	if err != nil {
 		log.Println("getTransactionsByUserId returned this message: " + err.Error())
-		return nil, ErrInternal //or ErrNotFound, maybe?
+		return nil, ErrInternal
 	}
 	defer rows.Close()
 
@@ -218,11 +222,15 @@ func (adb AppDB) getTransactionsByUserId(sourceId model.Id) ([]model.Transaction
 			&currentTransaction.Comment,
 		)
 		if err != nil {
-			log.Println("getTransactionsByUserId returned this message: " + err.Error())
-			return nil, ErrInternal //or ErrNotFound, maybe?
+			if err == sql.ErrNoRows {
+				return nil, ErrNotFound
+			} else {
+				log.Println("getTransactionsByUserId returned this message: " + err.Error())
+				return nil, ErrInternal
+			}
 		}
 
-		currentTransaction.Source, err = adb.getUserById(sourceId) //until do not processing
+		currentTransaction.Source = sourceId
 
 		transactionsOfUser = append(transactionsOfUser, currentTransaction)
 	}

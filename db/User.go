@@ -6,6 +6,18 @@ import (
 	"log"
 )
 
+func (cdb CacheDB) GetUserById(id model.Id) (model.User, error) {
+	/* Add search in Cache */
+
+	return cdb.adb.getUserById(id)
+}
+
+func (cdb CacheDB) GetUserByEmail(email string) (model.User, error) {
+	/* Add search in Cache */
+
+	return cdb.adb.getUserByEmail(email)
+}
+
 func (adb AppDB) getUserById(id model.Id) (model.User, error) {
 	row := adb.db.QueryRow("SELECT nick FROM users WHERE id=$1", id)
 	var user model.User
