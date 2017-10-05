@@ -8,7 +8,7 @@ import (
 )
 
 var ErrNotFound = errors.New("db: entry not found")
-var ErrInternal = errors.New("db: interal db error")
+var ErrInternal = errors.New("db: internal db error")
 
 type AppDB struct {
 	db *sql.DB
@@ -19,13 +19,15 @@ type CacheDB struct {
 	//TODO: add cache (user, transactions, subtransactions) pointer in the future
 }
 
+
+
 func InitDB(cfg string) (CacheDB, error) {
 	var cdb CacheDB
 	var err error
 
 	/* parse cfg string, split to dbCfg and CacheCfg */
 	dbCfg := cfg //temp
-	cdb.adb, err = InitAppDB(dbCfg)
+	cdb.adb, err = initAppDB(dbCfg)
 	if err != nil {
 		return cdb, err
 	}
@@ -35,7 +37,7 @@ func InitDB(cfg string) (CacheDB, error) {
 	return cdb, nil
 }
 
-func InitAppDB(cfg string) (AppDB, error) {
+func initAppDB(cfg string) (AppDB, error) {
 	db, err := sql.Open("postgres", cfg)
 	if err != nil {
 		log.Fatal(err)
@@ -54,7 +56,7 @@ func createTables(db *sql.DB) {
 	CREATE TABLE IF NOT EXISTS users (
 	id serial PRIMARY KEY,
 	email varchar(255) UNIQUE NOT NULL,
-	nick varchar(255) UNIQUE NOT NULL,
+	nick varchar(255) NOT NULL,
 	passhash varchar(64) NOT NULL
 	);`
 
