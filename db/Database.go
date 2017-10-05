@@ -4,7 +4,11 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
+	"errors"
 )
+
+var ErrNotFound = errors.New("db: entry not found")
+var ErrInternal = errors.New("db: interal db error")
 
 type AppDB struct {
 	db *sql.DB

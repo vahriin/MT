@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
 	"github.com/vahriin/MT/api"
 	"github.com/vahriin/MT/db"
+	"net/http"
 )
 
 func main() {

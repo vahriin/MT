@@ -2,8 +2,8 @@ package db
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/vahriin/MT/model"
+	"log"
 )
 
 func (adb AppDB) getUserById(id model.Id) (model.User, error) {
@@ -13,23 +13,25 @@ func (adb AppDB) getUserById(id model.Id) (model.User, error) {
 	if err := row.Scan(&user.Nick); err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return user, errors.New("no user in DB")
+			return user, ErrNotFound
 		case err != nil:
-			return user, err
+			log.Println("getUserById returned this message: " + err.Error())
+			return user, ErrInternal
 		}
 	}
 	return user, nil
 }
 
-func (adb AppDB) getUserByEmailFromDB(email string) (model.User, error) {
+func (adb AppDB) getUserByEmail(email string) (model.User, error) {
 	row := adb.db.QueryRow("SELECT id, nick FROM users WHERE email=$1", email)
 	var user model.User
 	if err := row.Scan(&user.Id, &user.Nick); err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return user, errors.New("no user in DB")
+			return user, ErrNotFound
 		case err != nil:
-			return user, err
+			log.Println("getUserByEmail returned this message: " + err.Error())
+			return user, ErrInternal
 		}
 	}
 	return user, nil

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/vahriin/MT/model"
+	"log"
 )
 
 /* change this for OAuth */
@@ -20,21 +21,29 @@ func (adb AppDB) AddPassUser(pu *model.PassUser) error {
 	return err
 }
 
-func (adb AppDB) GetPassUser(email string) (*model.PassUser, error) {
+func (adb AppDB) GetPassUserByEmail(email string) (*model.PassUser, error) {
 	row := adb.db.QueryRow("SELECT id, email, nick, passhash FROM users WHERE nick=$1", email)
 	passuser := new(model.PassUser)
 	if err := row.Scan(&passuser.Id, &passuser.Email, &passuser.Nick, &passuser.PassHash); err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return nil, errors.New("no user in DB")
+			return nil, ErrNotFound
 		case err != nil:
-			return nil, err
+			log.Println("getPassUserByEmail returned this message: " + err.Error())
+			return nil, ErrInternal
 		}
 	}
 	return passuser, nil
 }
 
 func (adb AppDB) DeletePassUser(pu *model.PassUser) error {
-	_, err := adb.db.Exec("DELETE FROM users WHERE id=$1", pu.Id)
+	result, err := adb.db.Exec("DELETE FROM users WHERE id=$1", pu.Id)
+	if err != nil {
+		log.Println("DeletePassUser returned this message: " + err.Error())
+		return ErrInternal
+	}
+	if affectedRows, _ := result.RowsAffected(); affectedRows == 0 {
+		return ErrNotFound
+	}
 	return err
 }

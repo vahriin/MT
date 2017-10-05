@@ -37,18 +37,18 @@ var config string = "user=vahriin dbname=MT_DB sslmode=disable"
 		t.Fatal(err)
 	}
 
-	gleb0, err := db.GetPassUser("Gleb")
+	gleb0, err := db.GetPassUserByEmail("Gleb")
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(gleb0.Id)
 
-	andrew0, err := db.GetPassUser("Andrew")
+	andrew0, err := db.GetPassUserByEmail("Andrew")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pass, err := db.GetPassUser("Empty")
+	pass, err := db.GetPassUserByEmail("Empty")
 	if err != nil || pass != nil {
 		t.Log(err)
 	}
@@ -58,14 +58,13 @@ var config string = "user=vahriin dbname=MT_DB sslmode=disable"
 		t.Fatal(err)
 	}
 
-	pass, err = db.GetPassUser("Gleb")
+	pass, err = db.GetPassUserByEmail("Gleb")
 	if err != nil {
 		t.Log(err)
 	}
 
 	err = db.DeletePassUser(andrew0)
 }*/
-
 
 /*func initUser(db AppDB) {
 
