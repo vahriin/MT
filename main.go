@@ -13,5 +13,6 @@ func main() {
 	appDb, _ := db.InitDB(config)
 	http.Handle("/transactions", api.TransactionsHandler(&appDb))
 	http.Handle("/transaction", api.TransactionHandler(&appDb))
+	http.Handle("/user", api.UserHandler(&appDb))
 	server.ListenAndServe()
 }
