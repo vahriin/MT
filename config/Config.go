@@ -1,21 +1,22 @@
 package config
 
 type AppConfig struct {
-	DataModule DataModuleConfig
+	Db DbConfig
+	//Cache CacheConfig
 	Server     ServerConfig
 	System     SystemConfig
 }
 
-type DataModuleConfig struct {
-	Db DbConfig
-	//Cache CacheConfig
-}
 
 type SystemConfig struct {
 	Logfile string
 }
 
-type SSLParams map[string]string
+type SSLParams struct {
+	Sslcert string
+	Sslkey string
+	Sslrootcert string
+}
 
 type DbConfig struct {
 	Host string
@@ -24,7 +25,7 @@ type DbConfig struct {
 	Password string
 	Name string
 	Sslmode string
-	Sslparams SSLParams
+	//Sslparams SSLParams
 }
 
 /*type CacheConfig struct {
@@ -32,5 +33,5 @@ type DbConfig struct {
 }*/
 
 type ServerConfig struct {
-	port string
+	Port string
 }
