@@ -2,8 +2,10 @@ package main
 
 import (
 	"github.com/vahriin/MT/daemon"
+	"github.com/vahriin/MT/config"
 )
 
 func main() {
-	daemon.TempRun()
+	cfg := config.ReadConfig()
+	daemon.Run(cfg)
 }

@@ -7,12 +7,15 @@ import (
 	"github.com/vahriin/MT/db"
 	"net/http"
 	"github.com/vahriin/MT/api"
+	"syscall"
+	"os/signal"
 )
 
 /* this function use for test run of server */
 /* delete later */
-func TempRun() {
-	var configstr string = "user=vahriin dbname=MT_DB sslmode=disable"
+
+/*func TempRun() {
+	var configstr string = "user=vahriin dbname=MT_DB password=123 sslmode=disable"
 
 	server := http.Server{Addr: "127.0.0.1:4000"}
 	appDb, _ := db.InitDB(configstr)
@@ -20,7 +23,7 @@ func TempRun() {
 	http.Handle("/transaction", api.TransactionHandler(&appDb))
 	http.Handle("/user", api.UserHandler(&appDb))
 	server.ListenAndServe()
-}
+}*/
 
 func Run(config *config.AppConfig) {
 	/* log init */
@@ -40,7 +43,7 @@ func Run(config *config.AppConfig) {
 
 	/* db init */
 
-	//AppDatabase, err := db.InitDB(config.DataModule)
+	AppDatabase, err := db.InitDB(&config.AppDbConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -51,21 +54,31 @@ func Run(config *config.AppConfig) {
 
 	/* handler init */
 
-	//http.Handle("/transactions", api.TransactionsHandler(&AppDatabase))
-	//http.Handle("/transaction", api.TransactionHandler(&AppDatabase))
-	//http.Handle("/user", api.UserHandler(&AppDatabase))
+	http.Handle("/transactions", api.TransactionsHandler(&AppDatabase))
+	http.Handle("/transaction", api.TransactionHandler(&AppDatabase))
+	http.Handle("/user", api.UserHandler(&AppDatabase))
 
 
-	/* end of hanler init */
+	/* end of handler init */
 
 	/*-----------------------------------------------------*/
 
 	/* server init */
 
 	Server := initServer(config.Server)
-	Server.ListenAndServe()
+	go Server.ListenAndServe()
 
 	/* end of server init */
 
+	waitForSignal()
+
 	/* End of app initialization */
+}
+
+/*No test*/
+func waitForSignal() {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	s := <-ch
+	log.Printf("Got signal: %v, exiting.", s)
 }

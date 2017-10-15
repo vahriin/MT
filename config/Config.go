@@ -1,10 +1,14 @@
 package config
 
 type AppConfig struct {
-	Db DbConfig
-	//Cache CacheConfig
+	AppDbConfig
 	Server     ServerConfig
 	System     SystemConfig
+}
+
+type AppDbConfig struct {
+	Db DbConfig
+	//Cache CacheConfig
 }
 
 
@@ -24,6 +28,7 @@ type DbConfig struct {
 	User string
 	Password string
 	Name string
+	//ConnectTimeout string
 	Sslmode string
 	//Sslparams SSLParams
 }

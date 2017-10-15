@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"errors"
+	"github.com/vahriin/MT/config"
 )
 
 var ErrNotFound = errors.New("db: entry not found")
@@ -21,13 +22,29 @@ type CacheDB struct {
 
 
 
-func InitDB(cfg string) (CacheDB, error) {
+func InitDB(cfg *config.AppDbConfig) (CacheDB, error) {
 	var cdb CacheDB
 	var err error
 
-	/* parse cfg string, split to dbCfg and CacheCfg */
-	dbCfg := cfg //temp
-	cdb.adb, err = initAppDB(dbCfg)
+	var dbConfig string =
+		"dbname=" + cfg.Db.Name + " " +
+		"user=" + cfg.Db.User + " " +
+		"password='" + cfg.Db.Password + "'" + " " +
+		"host=" + cfg.Db.Host + " " +
+		"port=" + cfg.Db.Port + " " + //TODO: add connect_timeout
+		"sslmode=" + cfg.Db.Sslmode
+
+	//TODO: add support of these verification types
+	switch cfg.Db.Sslmode {
+	case "require":
+		fallthrough
+	case "verify-ca":
+		fallthrough
+	case "verify-full":
+		panic("This verification type is not supported")
+	}
+
+	cdb.adb, err = initAppDB(dbConfig)
 	if err != nil {
 		return cdb, err
 	}
@@ -40,17 +57,17 @@ func InitDB(cfg string) (CacheDB, error) {
 func initAppDB(cfg string) (AppDB, error) {
 	db, err := sql.Open("postgres", cfg)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	createTables(db)
 	return AppDB{db: db}, nil
 }
 
 func createTables(db *sql.DB) {
-
+	//TODO: check exist and change these requests
 	createUsers := `
 
 	CREATE TABLE IF NOT EXISTS users (
