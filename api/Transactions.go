@@ -22,9 +22,6 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 
 			transactions, _ := cdb.GetTransactions(amount, first)
 
-			rw.Header().Set("Content-Type", "application/json")
-			rw.WriteHeader(http.StatusOK)
-
 			encoder := json.NewEncoder(rw)
 			err = encoder.Encode(transactions)
 			if err != nil {
@@ -32,38 +29,49 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 					http.StatusInternalServerError)
 				return
 			}
+
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusOK)
+
 		} else if req.Method == http.MethodPost {
-			if err := blockNoJSON(req); err != nil {
+			/*if err := blockNoJSON(req); err != nil {
 				http.Error(rw, http.StatusText(http.StatusBadRequest)+
 					"\n"+err.Error(), http.StatusBadRequest)
 				return
-			}
+			}*/
 
 			inputTransaction := new(model.InputTransaction)
 
 			decoder := json.NewDecoder(req.Body)
-			err := decoder.Decode(inputTransaction)
-			if err != nil {
-				fmt.Fprintln(rw, err)
+			if err := decoder.Decode(inputTransaction); err != nil {
 				http.Error(rw, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
+				fmt.Fprintln(rw, err)
 				return
 			}
 
-			err = cdb.AddTransaction(inputTransaction)
-			if err != nil {
+			if err := inputTransactionValidation(inputTransaction); err != nil {
+				http.Error(rw, http.StatusText(http.StatusBadRequest),
+					http.StatusBadRequest)
 				fmt.Fprintln(rw, err)
+				return
+			}
+
+
+			if err := cdb.AddTransaction(inputTransaction); err != nil {
 				http.Error(rw, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
+				fmt.Fprintln(rw, err)
 				return
 			}
 
 			rw.WriteHeader(http.StatusCreated)
+
 		} else {
 			http.Error(rw, http.StatusText(http.StatusBadRequest)+
 				"\nSupported only POST and GET", http.StatusBadRequest)
-			return
 		}
+		return
 	})
 }
 

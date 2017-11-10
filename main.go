@@ -9,3 +9,5 @@ func main() {
 	cfg := config.ReadConfig()
 	daemon.Run(cfg)
 }
+
+

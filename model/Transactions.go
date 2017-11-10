@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -33,18 +32,9 @@ type InputTransaction struct {
 
 // shit
 func (it *InputTransaction) SumProportions() int {
-	if len(it.Proportions) != 0 {
-		fmt.Println(it.Proportions)
-		var sum int
-		for _, proportion := range it.Proportions {
-			sum += proportion
-		}
-		return sum
-	} else {
-		for i := 0; i < len(it.Targets); i++ {
-			it.Proportions = append(it.Proportions, 1)
-		}
-		fmt.Println(it.Proportions)
-		return len(it.Targets)
+	var sum int
+	for _, proportion := range it.Proportions {
+		sum += proportion
 	}
+	return sum
 }

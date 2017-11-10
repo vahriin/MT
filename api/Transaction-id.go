@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func TransactionHandler(cdb *db.CacheDB) http.Handler {
+func TransactionIdHandler(cdb *db.CacheDB) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		transactionId, err := getTransactionParsedForm(req)
 		if err != nil {
@@ -31,11 +31,13 @@ func TransactionHandler(cdb *db.CacheDB) http.Handler {
 				return
 			}
 
+			encoder := json.NewEncoder(rw)
+			if err = encoder.Encode(subtransactions); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+
 			rw.Header().Set("Content-Type", "application/json")
 			rw.WriteHeader(http.StatusOK)
-
-			encoder := json.NewEncoder(rw)
-			err = encoder.Encode(subtransactions)
 		} else if req.Method == http.MethodDelete {
 			err := cdb.DeleteTransactionById(transactionId)
 			if err != nil {
@@ -53,8 +55,8 @@ func TransactionHandler(cdb *db.CacheDB) http.Handler {
 		} else {
 			http.Error(rw, http.StatusText(http.StatusBadRequest)+"\n"+
 				"This method is not supported in the current version of api", http.StatusBadRequest)
-			return
 		}
+		return
 	})
 }
 

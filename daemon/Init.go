@@ -55,9 +55,9 @@ func Run(config *config.AppConfig) {
 	/* handler init */
 
 	http.Handle("/transactions", api.TransactionsHandler(&AppDatabase))
-	http.Handle("/transaction", api.TransactionHandler(&AppDatabase))
+	http.Handle("/transaction-id", api.TransactionIdHandler(&AppDatabase))
 	http.Handle("/user", api.UserHandler(&AppDatabase))
-
+	http.Handle("/", http.FileServer(http.Dir("./dist/")))
 
 	/* end of handler init */
 

@@ -57,9 +57,8 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 		} else {
 			http.Error(rw, http.StatusText(http.StatusBadRequest) + "\n" +
 				"\"id\" parameter not found", http.StatusBadRequest)
-			return
 		}
-
+		return
 	})
 }
 

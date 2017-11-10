@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-var ApplicationConfigDir string = "moneyteam/"
+var ApplicationConfigDir string = "moneyteam-devel/"
 var SystemConfigFile string = "system"
 var DbConfigFile string = "database"
 var ServerConfigFile = "server"
