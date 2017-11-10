@@ -9,6 +9,7 @@ import (
 	"github.com/vahriin/MT/api"
 	"syscall"
 	"os/signal"
+	"github.com/vahriin/MT/server"
 )
 
 /* this function use for test run of server */
@@ -57,7 +58,7 @@ func Run(config *config.AppConfig) {
 	http.Handle("/transactions", api.TransactionsHandler(&AppDatabase))
 	http.Handle("/transaction-id", api.TransactionIdHandler(&AppDatabase))
 	http.Handle("/user", api.UserHandler(&AppDatabase))
-	http.Handle("/", http.FileServer(http.Dir("./dist/")))
+
 
 	/* end of handler init */
 
@@ -65,7 +66,7 @@ func Run(config *config.AppConfig) {
 
 	/* server init */
 
-	Server := initServer(config.Server)
+	Server := server.InitServer(&config.Server)
 	go Server.ListenAndServe()
 
 	/* end of server init */

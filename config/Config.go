@@ -38,5 +38,7 @@ type DbConfig struct {
 }*/
 
 type ServerConfig struct {
+	Address string
 	Port string
+	HtmlRoot string
 }
