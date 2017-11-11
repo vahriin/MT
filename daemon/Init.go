@@ -12,20 +12,6 @@ import (
 	"github.com/vahriin/MT/server"
 )
 
-/* this function use for test run of server */
-/* delete later */
-
-/*func TempRun() {
-	var configstr string = "user=vahriin dbname=MT_DB password=123 sslmode=disable"
-
-	server := http.Server{Addr: "127.0.0.1:4000"}
-	appDb, _ := db.InitDB(configstr)
-	http.Handle("/transactions", api.TransactionsHandler(&appDb))
-	http.Handle("/transaction", api.TransactionHandler(&appDb))
-	http.Handle("/user", api.UserHandler(&appDb))
-	server.ListenAndServe()
-}*/
-
 func Run(config *config.AppConfig) {
 	/* log init */
 
@@ -67,7 +53,8 @@ func Run(config *config.AppConfig) {
 	/* server init */
 
 	Server := server.InitServer(&config.Server)
-	go Server.ListenAndServe()
+	go Server.ListenAndServeTLS(config.Server.CertFile, config.Server.KeyFile)
+	//go Server.ListenAndServe()
 
 	/* end of server init */
 

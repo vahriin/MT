@@ -35,7 +35,7 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 			for _, userId := range(usersId) {
 				user, err := cdb.GetUserById(userId)
 				if err == nil {
-					users = append(users, user)
+					users = append(users, *user)
 				} else {
 					usersNotFound = append(usersNotFound, userId)
 				}

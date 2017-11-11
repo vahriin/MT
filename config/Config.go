@@ -41,4 +41,6 @@ type ServerConfig struct {
 	Address string
 	Port string
 	HtmlRoot string
+	CertFile string
+	KeyFile string
 }

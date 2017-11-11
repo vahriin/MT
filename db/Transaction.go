@@ -9,8 +9,7 @@ import (
 /* TODO: make to return "Not Found" error for all public functions, that take model.Id */
 
 func (cdb CacheDB) AddTransaction(transaction *model.InputTransaction) error {
-	err := cdb.adb.addTransaction(transaction)
-	if err != nil {
+	if err := cdb.adb.addTransaction(transaction); err != nil {
 		return err
 	}
 
@@ -19,19 +18,19 @@ func (cdb CacheDB) AddTransaction(transaction *model.InputTransaction) error {
 	return nil
 }
 
-func (cdb CacheDB) GetTransactions(limit int, offset int) ([]model.MainTransaction, error) {
+func (cdb CacheDB) GetTransactions(limit int, offset int) (*[]model.MainTransaction, error) {
 	/* Add cache search */
 
 	return cdb.adb.getMainTransactionsPack(limit, offset)
 }
 
-func (cdb CacheDB) GetTransactionsByUser(user *model.User, number int) ([]model.MainTransaction, error) {
+func (cdb CacheDB) GetTransactionsByUser(user *model.User, number int) (*[]model.MainTransaction, error) {
 	/* Add search transaction from cache */
 
 	return cdb.adb.getMainTransactionsByUserId(user.Id)
 }
 
-func (cdb CacheDB) GetSubtransactionsOfTransaction(transactionId model.Id) ([]model.Subtransaction, error) {
+func (cdb CacheDB) GetSubtransactionsOfTransaction(transactionId model.Id) (*[]model.Subtransaction, error) {
 	/* Add search subtransaction pack from cache */
 
 	return cdb.adb.getSubtransactionsById(transactionId) //temp
@@ -54,9 +53,11 @@ func (adb AppDB) addTransaction(inputTransaction *model.InputTransaction) error 
 
 	addTX, err := adb.db.Begin()
 	if err != nil {
-		log.Println("getMainTransactionsPack returned this message: " + err.Error())
+		log.Println("addTransaction returned this message: " + err.Error())
 		return ErrInternal
 	}
+
+	defer addTX.Commit()
 
 	transactionId, err := addMainTransaction(addTX, inputTransaction)
 	if err != nil {
@@ -96,7 +97,6 @@ func (adb AppDB) addTransaction(inputTransaction *model.InputTransaction) error 
 		return err
 	}
 
-	addTX.Commit()
 	return nil
 }
 
@@ -106,6 +106,8 @@ func (adb AppDB) deleteTransactionById(transactionId model.Id) error {
 		log.Println("deleteTransactionById returned this message: " + err.Error())
 		return ErrInternal
 	}
+
+	defer delTX.Commit()
 
 	err = deleteMainTransaction(delTX, transactionId)
 	if err != nil {
@@ -119,14 +121,13 @@ func (adb AppDB) deleteTransactionById(transactionId model.Id) error {
 		return err
 	}
 
-	delTX.Commit()
 	return nil
 }
 
-func (adb AppDB) getMainTransactionsPack(limit int, offset int) ([]model.MainTransaction, error) {
+func (adb AppDB) getMainTransactionsPack(limit int, offset int) (*[]model.MainTransaction, error) {
 	rows, err := adb.db.Query(`SELECT
 		tr_id, date, source, sum, matter, comment
-		FROM transactions ORDER BY date
+		FROM app_transaction ORDER BY date
 		LIMIT $1 OFFSET $2`,
 		limit, offset)
 	if err != nil {
@@ -140,14 +141,12 @@ func (adb AppDB) getMainTransactionsPack(limit int, offset int) ([]model.MainTra
 	for rows.Next() {
 		var transaction model.MainTransaction
 
-		err := rows.Scan(&transaction.Id,
+		if err := rows.Scan(&transaction.Id,
 			&transaction.Date,
 			&transaction.Source,
 			&transaction.Sum,
 			&transaction.Matter,
-			&transaction.Comment)
-
-		if err != nil {
+			&transaction.Comment); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, ErrNotFound
 			} else {
@@ -159,12 +158,12 @@ func (adb AppDB) getMainTransactionsPack(limit int, offset int) ([]model.MainTra
 		transactions = append(transactions, transaction)
 	}
 
-	return transactions, nil
+	return &transactions, nil
 }
 
 func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (model.Id, error) {
 	_, err := tx.Exec(`
-		INSERT INTO transactions(
+		INSERT INTO app_transaction(
 		date,
 		source,
 		sum,
@@ -186,7 +185,7 @@ func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (m
 		return 0, ErrInternal
 	}
 
-	row := tx.QueryRow("SELECT MAX(tr_id) FROM transactions")
+	row := tx.QueryRow("SELECT MAX(tr_id) FROM app_transaction")
 
 	var trId model.Id
 	err = row.Scan(&trId)
@@ -200,11 +199,11 @@ func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (m
 
 /* temp */
 /* Add count of transaction */
-func (adb AppDB) getMainTransactionsByUserId(sourceId model.Id) ([]model.MainTransaction, error) {
+func (adb AppDB) getMainTransactionsByUserId(sourceId model.Id) (*[]model.MainTransaction, error) {
 	var transactionsOfUser []model.MainTransaction
 
 	rows, err := adb.db.Query(`SELECT tr_id, date, sum, matter, comment
-		FROM transactions WHERE source=$1`, sourceId)
+		FROM app_transaction WHERE source=$1`, sourceId)
 	if err != nil {
 		log.Println("getMainTransactionsByUserId returned this message: " + err.Error())
 		return nil, ErrInternal
@@ -234,11 +233,11 @@ func (adb AppDB) getMainTransactionsByUserId(sourceId model.Id) ([]model.MainTra
 
 		transactionsOfUser = append(transactionsOfUser, currentTransaction)
 	}
-	return transactionsOfUser, nil
+	return &transactionsOfUser, nil
 }
 
 func deleteMainTransaction(tx *sql.Tx, id model.Id) error {
-	result, err := tx.Exec("DELETE FROM transactions WHERE tr_id=$1", id)
+	result, err := tx.Exec("DELETE FROM app_transaction WHERE tr_id=$1", id)
 	if err != nil {
 		log.Println("deleteMainTransaction returned this message: " + err.Error())
 		return ErrInternal

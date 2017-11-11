@@ -6,15 +6,15 @@ import (
 	"log"
 )
 
-func (adb AppDB) getSubtransactionsById(transactionId model.Id) ([]model.Subtransaction, error) {
-	row := adb.db.QueryRow("SELECT DISTINCT source FROM subtransactions WHERE tr_id=$1", transactionId)
+func (adb AppDB) getSubtransactionsById(transactionId model.Id) (*[]model.Subtransaction, error) {
+	row := adb.db.QueryRow("SELECT DISTINCT source FROM app_subtransaction WHERE tr_id=$1", transactionId)
 	var sourceId model.Id
 	err := row.Scan(&sourceId)
 	if err != nil {
 		return nil, ErrNotFound
 	}
 
-	rows, err := adb.db.Query("SELECT target, sum, proportion FROM subtransactions WHERE tr_id=$1", transactionId)
+	rows, err := adb.db.Query("SELECT target, sum, proportion FROM app_subtransaction WHERE tr_id=$1", transactionId)
 	if err != nil {
 		log.Println("getSubtransactionsById returned this message: " + err.Error())
 		return nil, ErrInternal
@@ -31,14 +31,14 @@ func (adb AppDB) getSubtransactionsById(transactionId model.Id) ([]model.Subtran
 			&subtransaction.Sum,
 			&subtransaction.Proportion,
 		)
-		if err != nil {
-			log.Println("getSubtransactionsById returned this message: " + err.Error())
-			return nil, ErrInternal
-		}
 
 		if err != nil {
-			log.Println("getSubtransactionsById returned this message: " + err.Error())
-			return nil, ErrInternal
+			if err == sql.ErrNoRows {
+				return nil, ErrNotFound
+			} else {
+				log.Println("getSubtransactionsById returned this message: " + err.Error())
+				return nil, ErrInternal
+			}
 		}
 
 		subtransaction.TransactionId = transactionId
@@ -46,11 +46,11 @@ func (adb AppDB) getSubtransactionsById(transactionId model.Id) ([]model.Subtran
 
 		subtransactions = append(subtransactions, subtransaction)
 	}
-	return subtransactions, nil
+	return &subtransactions, nil
 }
 
 func (cdb CacheDB) Difference(sourceId model.Id, targetId model.Id) (int, error) {
-	row := cdb.adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
+	row := cdb.adb.db.QueryRow("SELECT SUM(sum) FROM app_subtransaction WHERE source=$1 AND target=$2",
 		sourceId, targetId)
 
 	var sumSource int
@@ -60,7 +60,7 @@ func (cdb CacheDB) Difference(sourceId model.Id, targetId model.Id) (int, error)
 		return 0, ErrNotFound
 	}
 
-	row = cdb.adb.db.QueryRow("SELECT SUM(sum) FROM subtransactions WHERE source=$1 AND target=$2",
+	row = cdb.adb.db.QueryRow("SELECT SUM(sum) FROM app_subtransaction WHERE source=$1 AND target=$2",
 		targetId, sourceId)
 
 	var sumTarget int
@@ -75,7 +75,7 @@ func (cdb CacheDB) Difference(sourceId model.Id, targetId model.Id) (int, error)
 
 func addSubtransaction(tx *sql.Tx, subtransaction *model.Subtransaction) error {
 	_, err := tx.Exec(`
-	INSERT INTO subtransactions(
+	INSERT INTO app_subtransaction(
 	tr_id,
 	source,
 	target,
@@ -94,9 +94,10 @@ func addSubtransaction(tx *sql.Tx, subtransaction *model.Subtransaction) error {
 }
 
 func deleteSubtransactionsPack(tx *sql.Tx, transactionId model.Id) error {
-	result, err := tx.Exec("DELETE FROM subtransactions WHERE tr_id=$1", transactionId)
+	result, err := tx.Exec("DELETE FROM app_subtransaction WHERE tr_id=$1", transactionId)
 	if err != nil {
 		log.Println("deleteSubtransactionPack returned this message: " + err.Error())
+		return ErrInternal
 	}
 	if affectedRows, _ := result.RowsAffected(); affectedRows == 0 {
 		return ErrNotFound

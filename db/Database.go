@@ -6,10 +6,11 @@ import (
 	"log"
 	"errors"
 	"github.com/vahriin/MT/config"
-)
+	)
 
 var ErrNotFound = errors.New("db: entry not found")
 var ErrInternal = errors.New("db: internal db error")
+var ErrForbidden = errors.New("db: this operation are forbidden")
 
 type AppDB struct {
 	db *sql.DB
@@ -26,9 +27,9 @@ func InitDB(cfg *config.AppDbConfig) (CacheDB, error) {
 	var cdb CacheDB
 	var err error
 
-	var dbConfig string =
+	var dbConfig =
 		"dbname=" + cfg.Db.Name + " " +
-		"user=" + cfg.Db.User + " " +
+		"user='" + cfg.Db.User + "' " +
 		"password='" + cfg.Db.Password + "'" + " " +
 		"host=" + cfg.Db.Host + " " +
 		"port=" + cfg.Db.Port + " " + //TODO: add connect_timeout
@@ -68,18 +69,33 @@ func initAppDB(cfg string) (AppDB, error) {
 
 func createTables(db *sql.DB) {
 	//TODO: check exist and change these requests
-	createUsers := `
+	createUser := `
 
-	CREATE TABLE IF NOT EXISTS users (
+	CREATE TABLE IF NOT EXISTS app_user (
 	id serial PRIMARY KEY,
-	email varchar(255) UNIQUE NOT NULL,
-	nick varchar(255) NOT NULL,
-	passhash varchar(64) NOT NULL
+	google_id varchar(255) UNIQUE NOT NULL,
+	nick varchar(255) NOT NULL
 	);`
 
-	createTransactions := `
+	createGroup := `
 
-	CREATE TABLE IF NOT EXISTS transactions (
+	CREATE TABLE IF NOT EXISTS app_group (
+	id serial PRIMARY KEY,
+	name varchar(255) UNIQUE NOT NULL,
+	creator_id integer NOT NULL
+	);`
+
+	createUserGroup := `
+
+	CREATE TABLE IF NOT EXISTS app_user_group (
+	user_id integer UNIQUE NOT NULL,
+	group_id integer UNIQUE NOT NULL
+	);`
+
+
+	createTransaction := `
+
+	CREATE TABLE IF NOT EXISTS app_transaction (
 	tr_id serial PRIMARY KEY,
 	date timestamp(0) without time zone NOT NULL,
 	source integer NOT NULL,
@@ -88,9 +104,9 @@ func createTables(db *sql.DB) {
 	comment text NOT NULL
 	);`
 
-	createSubtransactions := `
+	createSubtransaction := `
 
-	CREATE TABLE IF NOT EXISTS subtransactions (
+	CREATE TABLE IF NOT EXISTS app_subtransaction (
 	tr_id integer NOT NULL,
 	source integer NOT NULL,
 	target integer NOT NULL,
@@ -98,18 +114,29 @@ func createTables(db *sql.DB) {
 	proportion integer NOT NULL
 	);`
 
-	_, err := db.Exec(createUsers)
-	if err != nil {
-		log.Fatal(err)
+
+	var err error
+	if _, err = db.Exec(createUser); err != nil {
+		log.Fatal("CreateUser returned this message: " + err.Error())
 	}
 
-	_, err = db.Exec(createTransactions)
-	if err != nil {
-		log.Fatal(err)
+
+	if _, err = db.Exec(createGroup); err != nil {
+		log.Fatal("CreateGroup returned this message: " + err.Error())
 	}
 
-	_, err = db.Exec(createSubtransactions)
-	if err != nil {
-		log.Fatal(err)
+
+	if _, err = db.Exec(createUserGroup); err != nil {
+		log.Fatal("CreateUserGroup returned this message: " + err.Error())
+	}
+
+
+	if _, err = db.Exec(createTransaction); err != nil {
+		log.Fatal("CreateTransaction returned this message: " + err.Error())
+	}
+
+
+	if _, err = db.Exec(createSubtransaction); err != nil {
+		log.Fatal("CreateSubtransaction returned this message: " + err.Error())
 	}
 }

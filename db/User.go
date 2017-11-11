@@ -6,45 +6,45 @@ import (
 	"log"
 )
 
-func (cdb CacheDB) GetUserById(id model.Id) (model.User, error) {
+func (cdb CacheDB) GetUserById(id model.Id) (*model.User, error) {
 	/* Add search in Cache */
 
 	return cdb.adb.getUserById(id)
 }
 
-func (cdb CacheDB) GetUserByEmail(email string) (model.User, error) {
+func (cdb CacheDB) GetUserByGoogleId(googleId []byte) (*model.User, error) {
 	/* Add search in Cache */
 
-	return cdb.adb.getUserByEmail(email)
+	return cdb.adb.getUserByGoogleId(googleId)
 }
 
-func (adb AppDB) getUserById(id model.Id) (model.User, error) {
-	row := adb.db.QueryRow("SELECT nick FROM users WHERE id=$1", id)
+func (adb AppDB) getUserById(id model.Id) (*model.User, error) {
+	row := adb.db.QueryRow("SELECT nick FROM app_user WHERE id=$1;", id)
 	var user model.User
 	user.Id = id
 	if err := row.Scan(&user.Nick); err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return user, ErrNotFound
+			return &user, ErrNotFound
 		case err != nil:
 			log.Println("getUserById returned this message: " + err.Error())
-			return user, ErrInternal
+			return &user, ErrInternal
 		}
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (adb AppDB) getUserByEmail(email string) (model.User, error) {
-	row := adb.db.QueryRow("SELECT id, nick FROM users WHERE email=$1", email)
+func (adb AppDB) getUserByGoogleId(googleId []byte) (*model.User, error) {
+	row := adb.db.QueryRow("SELECT id, nick FROM app_user WHERE email=$1", googleId)
 	var user model.User
 	if err := row.Scan(&user.Id, &user.Nick); err != nil {
 		switch {
 		case err == sql.ErrNoRows:
-			return user, ErrNotFound
+			return &user, ErrNotFound
 		case err != nil:
-			log.Println("getUserByEmail returned this message: " + err.Error())
-			return user, ErrInternal
+			log.Println("getUserByGoogleId returned this message: " + err.Error())
+			return &user, ErrInternal
 		}
 	}
-	return user, nil
+	return &user, nil
 }
