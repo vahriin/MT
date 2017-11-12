@@ -11,6 +11,6 @@ func InitServer(config *config.ServerConfig) http.Server {
 }
 
 func createServer(config *config.ServerConfig) http.Server {
-	return http.Server {
+	return http.Server{
 		Addr: config.Address + ":" + config.Port}
 }

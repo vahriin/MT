@@ -57,7 +57,6 @@ func TransactionsHandler(cdb *db.CacheDB) http.Handler {
 				return
 			}
 
-
 			if err := cdb.AddTransaction(inputTransaction); err != nil {
 				http.Error(rw, http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)

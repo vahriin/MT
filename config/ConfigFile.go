@@ -1,14 +1,15 @@
 package config
 
 import (
-	"os"
 	"encoding/json"
+	"os"
 )
 
 var ApplicationConfigDir string = "moneyteam-devel/"
 var SystemConfigFile string = "system"
 var DbConfigFile string = "database"
 var ServerConfigFile = "server"
+
 //var CacheConfigFile string = "cache"
 
 func ReadConfig() *AppConfig {

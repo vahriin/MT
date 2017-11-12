@@ -1,9 +1,9 @@
 package db
 
 import (
+	"database/sql"
 	"github.com/vahriin/MT/model"
 	"log"
-	"database/sql"
 )
 
 func (cdb CacheDB) AddGroup(group *model.Group) error {
@@ -23,7 +23,6 @@ func (cdb CacheDB) GetGroupById(groupId model.Id) (*model.Group, error) {
 
 func (cdb CacheDB) GetGroupsByCreator(creatorId model.Id) (*[]model.Group, error) {
 
-
 	return cdb.adb.getGroupsByCreator(creatorId)
 }
 
@@ -31,8 +30,6 @@ func (cdb CacheDB) DeleteGroupById(groupId model.Id) error {
 
 	return cdb.adb.deleteGroupById(groupId)
 }
-
-
 
 func (adb AppDB) addGroup(group *model.Group) error {
 	addTx, err := adb.db.Begin()
@@ -52,7 +49,7 @@ func (adb AppDB) addGroup(group *model.Group) error {
 	}
 
 	if _, err := addTx.Exec(`INSERT INTO app_user_group (user_id, group_id) VALUES ($1, $2);`,
-			group.Creator, group.Id); err != nil {
+		group.Creator, group.Id); err != nil {
 		log.Println("addGroup returned this message: " + err.Error())
 		addTx.Rollback()
 		return ErrInternal
@@ -88,7 +85,7 @@ func (adb AppDB) getGroupsByCreator(creatorId model.Id) (*[]model.Group, error) 
 	for rows.Next() {
 		var currentGroup model.Group
 
-		if err:= rows.Scan(&currentGroup.Id, &currentGroup.Name); err != nil {
+		if err := rows.Scan(&currentGroup.Id, &currentGroup.Name); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, ErrNotFound
 			} else {

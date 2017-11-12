@@ -1,15 +1,15 @@
 package daemon
 
 import (
-	"github.com/vahriin/MT/config"
-	"os"
-	"log"
-	"github.com/vahriin/MT/db"
-	"net/http"
 	"github.com/vahriin/MT/api"
-	"syscall"
-	"os/signal"
+	"github.com/vahriin/MT/config"
+	"github.com/vahriin/MT/db"
 	"github.com/vahriin/MT/server"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func Run(config *config.AppConfig) {
@@ -44,7 +44,6 @@ func Run(config *config.AppConfig) {
 	http.Handle("/transactions", api.TransactionsHandler(&AppDatabase))
 	http.Handle("/transaction-id", api.TransactionIdHandler(&AppDatabase))
 	http.Handle("/user", api.UserHandler(&AppDatabase))
-
 
 	/* end of handler init */
 

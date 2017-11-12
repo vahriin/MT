@@ -7,5 +7,5 @@ type User struct {
 
 type GoogleUser struct {
 	User
-	googleId []byte
+	GoogleId []byte
 }

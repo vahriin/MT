@@ -2,8 +2,8 @@ package config
 
 type AppConfig struct {
 	AppDbConfig
-	Server     ServerConfig
-	System     SystemConfig
+	Server ServerConfig
+	System SystemConfig
 }
 
 type AppDbConfig struct {
@@ -11,23 +11,22 @@ type AppDbConfig struct {
 	//Cache CacheConfig
 }
 
-
 type SystemConfig struct {
 	Logfile string
 }
 
 type SSLParams struct {
-	Sslcert string
-	Sslkey string
+	Sslcert     string
+	Sslkey      string
 	Sslrootcert string
 }
 
 type DbConfig struct {
-	Host string
-	Port string
-	User string
+	Host     string
+	Port     string
+	User     string
 	Password string
-	Name string
+	Name     string
 	//ConnectTimeout string
 	Sslmode string
 	//Sslparams SSLParams
@@ -38,9 +37,9 @@ type DbConfig struct {
 }*/
 
 type ServerConfig struct {
-	Address string
-	Port string
+	Address  string
+	Port     string
 	HtmlRoot string
 	CertFile string
-	KeyFile string
+	KeyFile  string
 }

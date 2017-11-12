@@ -2,11 +2,11 @@ package db
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"
-	"log"
 	"errors"
+	_ "github.com/lib/pq"
 	"github.com/vahriin/MT/config"
-	)
+	"log"
+)
 
 var ErrNotFound = errors.New("db: entry not found")
 var ErrInternal = errors.New("db: internal db error")
@@ -21,14 +21,11 @@ type CacheDB struct {
 	//TODO: add cache (user, transactions, subtransactions) pointer in the future
 }
 
-
-
 func InitDB(cfg *config.AppDbConfig) (CacheDB, error) {
 	var cdb CacheDB
 	var err error
 
-	var dbConfig =
-		"dbname=" + cfg.Db.Name + " " +
+	var dbConfig = "dbname=" + cfg.Db.Name + " " +
 		"user='" + cfg.Db.User + "' " +
 		"password='" + cfg.Db.Password + "'" + " " +
 		"host=" + cfg.Db.Host + " " +
@@ -92,7 +89,6 @@ func createTables(db *sql.DB) {
 	group_id integer UNIQUE NOT NULL
 	);`
 
-
 	createTransaction := `
 
 	CREATE TABLE IF NOT EXISTS app_transaction (
@@ -114,27 +110,22 @@ func createTables(db *sql.DB) {
 	proportion integer NOT NULL
 	);`
 
-
 	var err error
 	if _, err = db.Exec(createUser); err != nil {
 		log.Fatal("CreateUser returned this message: " + err.Error())
 	}
 
-
 	if _, err = db.Exec(createGroup); err != nil {
 		log.Fatal("CreateGroup returned this message: " + err.Error())
 	}
-
 
 	if _, err = db.Exec(createUserGroup); err != nil {
 		log.Fatal("CreateUserGroup returned this message: " + err.Error())
 	}
 
-
 	if _, err = db.Exec(createTransaction); err != nil {
 		log.Fatal("CreateTransaction returned this message: " + err.Error())
 	}
-
 
 	if _, err = db.Exec(createSubtransaction); err != nil {
 		log.Fatal("CreateSubtransaction returned this message: " + err.Error())

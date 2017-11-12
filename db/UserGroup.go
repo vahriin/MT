@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/vahriin/MT/model"
 	"database/sql"
+	"github.com/vahriin/MT/model"
 	"log"
 )
 
@@ -75,8 +75,6 @@ func (cdb CacheDB) DelUserGroup(userId, groupId model.Id) error {
 	return nil
 }
 
-
-
 func (adb AppDB) getGroupsIdByUserId(id model.Id) (*[]model.Id, error) {
 	rows, err := adb.db.Query(`SELECT group_id FROM app_user_group WHERE user_id=$1;`, id)
 	if err != nil {
@@ -87,7 +85,7 @@ func (adb AppDB) getGroupsIdByUserId(id model.Id) (*[]model.Id, error) {
 	for rows.Next() {
 		var currentGroupId model.Id
 
-		if err:= rows.Scan(&currentGroupId); err != nil {
+		if err := rows.Scan(&currentGroupId); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, ErrNotFound
 			} else {
@@ -111,7 +109,7 @@ func (adb AppDB) getUsersIdByGroupId(id model.Id) (*[]model.Id, error) {
 	for rows.Next() {
 		var currentUserId model.Id
 
-		if err:= rows.Scan(&currentUserId); err != nil {
+		if err := rows.Scan(&currentUserId); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, ErrNotFound
 			} else {
@@ -124,4 +122,3 @@ func (adb AppDB) getUsersIdByGroupId(id model.Id) (*[]model.Id, error) {
 
 	return &usersId, nil
 }
-

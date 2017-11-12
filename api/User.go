@@ -1,21 +1,21 @@
 package api
 
 import (
-	"github.com/vahriin/MT/db"
-	"net/http"
-	"github.com/vahriin/MT/model"
-	"strconv"
-	"errors"
 	"encoding/json"
+	"errors"
+	"github.com/vahriin/MT/db"
+	"github.com/vahriin/MT/model"
+	"net/http"
+	"strconv"
 	"strings"
 )
 
 func UserHandler(cdb *db.CacheDB) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.Method != http.MethodGet {
-			http.Error(rw, http.StatusText(http.StatusBadRequest) + "\n" +
+			http.Error(rw, http.StatusText(http.StatusBadRequest)+"\n"+
 				"This method are unsupported", http.StatusBadRequest)
-				return
+			return
 		}
 
 		req.ParseForm()
@@ -24,7 +24,7 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 		if form1, ok := req.Form["id"]; ok {
 			usersId, err := parseUser(strings.Split(form1[0], ","))
 			if err != nil {
-				http.Error(rw, http.StatusText(http.StatusBadRequest) + "\n" +
+				http.Error(rw, http.StatusText(http.StatusBadRequest)+"\n"+
 					"\"id\" parameter not found", http.StatusBadRequest)
 				return
 			}
@@ -32,7 +32,7 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 			var users []model.User
 			var usersNotFound []model.Id
 
-			for _, userId := range(usersId) {
+			for _, userId := range usersId {
 				user, err := cdb.GetUserById(userId)
 				if err == nil {
 					users = append(users, *user)
@@ -55,7 +55,7 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 			}
 
 		} else {
-			http.Error(rw, http.StatusText(http.StatusBadRequest) + "\n" +
+			http.Error(rw, http.StatusText(http.StatusBadRequest)+"\n"+
 				"\"id\" parameter not found", http.StatusBadRequest)
 		}
 		return
@@ -64,7 +64,7 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 
 func parseUser(strUser []string) ([]model.Id, error) {
 	var usersId []model.Id
-	for _, strUserId := range(strUser) {
+	for _, strUserId := range strUser {
 		userId, err := strconv.ParseInt(strUserId, 10, 32)
 		if err != nil {
 			return nil, errors.New("number not found")
