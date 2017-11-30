@@ -19,7 +19,7 @@ func GroupsHandler(cdb *db.CacheDB) http.Handler {
 			encoder := json.NewEncoder(rw)
 
 			if !creator {
-				userGroups, err := cdb.GetGroupByUser(id)
+				userGroups, err := cdb.GetGroupsByUser(id)
 				if err != nil {
 					if err == db.ErrNotFound {
 						http.Error(rw, http.StatusText(http.StatusNotFound), http.StatusNotFound)

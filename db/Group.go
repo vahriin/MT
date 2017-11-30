@@ -15,7 +15,7 @@ func (cdb CacheDB) AddGroup(group *model.Group) error {
 	return nil
 }
 
-func (cdb CacheDB) GetGroupByUser(userId model.Id) (*[]model.Group, error) {
+func (cdb CacheDB) GetGroupsByUser(userId model.Id) (*[]model.Group, error) {
 	/* cache*/
 
 	return cdb.adb.getGroupsByUser(userId)
@@ -93,6 +93,33 @@ func (adb AppDB) getGroupsByUser(id model.Id) (*[]model.Group, error) {
 		userGroups = append(userGroups, currentGroup)
 	}
 	return &userGroups, nil
+}
+
+func (adb AppDB) getGroupMembers(id model.Id) (*[]model.Id, error) {
+	rows, err := adb.db.Query(`SELECT user_id FROM app_user_group WHERE group_id;`, id)
+	if err != nil {
+		return nil, ErrInternal
+	}
+
+	defer rows.Close()
+
+	var groupMembers []model.Id
+	for rows.Next() {
+		var currentMember model.Id
+
+		if err := rows.Scan(&currentMember); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, ErrNotFound
+			} else {
+				log.Println("getGroupsByCreator returned this message: " + err.Error())
+				return nil, ErrInternal
+			}
+		}
+
+		groupMembers = append(groupMembers, currentMember)
+	}
+
+	return &groupMembers, nil
 }
 
 func (adb AppDB) getGroupById(id model.Id) (*model.Group, error) {

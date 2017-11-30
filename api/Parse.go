@@ -108,3 +108,19 @@ func getGroupsForm(req *http.Request) (model.Id, bool, error) {
 
 	return model.Id(id), creator, nil
 }
+
+func getGroupIdForm(req *http.Request) (model.Id, error) {
+	req.ParseForm()
+
+	form1, ok := req.Form["id"]
+	if !ok {
+		return model.Id(0), errors.New("\"id\" parameter not found")
+	}
+
+	id, err := strconv.ParseInt(form1[0], 10, 32)
+	if err != nil {
+		return model.Id(0), errors.New("No number in \"first\" ")
+	}
+
+	return model.Id(int(id)), nil
+}
