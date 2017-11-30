@@ -81,6 +81,8 @@ func (adb AppDB) getGroupsIdByUserId(id model.Id) (*[]model.Id, error) {
 		return nil, ErrInternal
 	}
 
+	defer rows.Close()
+
 	var groupsId []model.Id
 	for rows.Next() {
 		var currentGroupId model.Id

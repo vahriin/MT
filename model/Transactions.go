@@ -4,16 +4,9 @@ import (
 	"time"
 )
 
-type Subtransaction struct {
-	TransactionId Id
-	Source        Id
-	Target        Id
-	Sum           int
-	Proportion    int
-}
-
 type MainTransaction struct {
 	Id      Id
+	Group   Id
 	Date    time.Time
 	Source  Id
 	Sum     int
@@ -22,6 +15,7 @@ type MainTransaction struct {
 }
 
 type InputTransaction struct {
+	Group       Id
 	Source      Id
 	Sum         int
 	Matter      string
@@ -30,7 +24,6 @@ type InputTransaction struct {
 	Proportions []int
 }
 
-// shit
 func (it *InputTransaction) SumProportions() int {
 	var sum int
 	for _, proportion := range it.Proportions {

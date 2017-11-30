@@ -86,13 +86,14 @@ func createTables(db *sql.DB) {
 
 	CREATE TABLE IF NOT EXISTS app_user_group (
 	user_id integer UNIQUE NOT NULL,
-	group_id integer UNIQUE NOT NULL
+	gr_id integer UNIQUE NOT NULL
 	);`
 
 	createTransaction := `
 
 	CREATE TABLE IF NOT EXISTS app_transaction (
 	tr_id serial PRIMARY KEY,
+	gr_id integer NOT NULL,
 	date timestamp(0) without time zone NOT NULL,
 	source integer NOT NULL,
 	sum integer NOT NULL,

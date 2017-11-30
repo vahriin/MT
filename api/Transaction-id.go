@@ -2,16 +2,13 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/vahriin/MT/db"
-	"github.com/vahriin/MT/model"
 	"net/http"
-	"strconv"
 )
 
 func TransactionIdHandler(cdb *db.CacheDB) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		transactionId, err := getTransactionParsedForm(req)
+		transactionId, err := getTransactionIdForm(req)
 		if err != nil {
 			http.Error(rw, http.StatusText(http.StatusBadRequest)+"\n"+
 				err.Error(), http.StatusBadRequest)
@@ -58,20 +55,4 @@ func TransactionIdHandler(cdb *db.CacheDB) http.Handler {
 		}
 		return
 	})
-}
-
-func getTransactionParsedForm(req *http.Request) (model.Id, error) {
-	req.ParseForm()
-
-	form1, ok := req.Form["id"]
-	if !ok {
-		return model.Id(0), errors.New("\"id\" parameter not found")
-	}
-
-	id, err := strconv.ParseInt(form1[0], 10, 32)
-	if err != nil {
-		return model.Id(0), errors.New("No number in \"first\" ")
-	}
-
-	return model.Id(int(id)), nil
 }

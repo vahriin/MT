@@ -2,11 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/vahriin/MT/db"
 	"github.com/vahriin/MT/model"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -60,16 +58,4 @@ func UserHandler(cdb *db.CacheDB) http.Handler {
 		}
 		return
 	})
-}
-
-func parseUser(strUser []string) ([]model.Id, error) {
-	var usersId []model.Id
-	for _, strUserId := range strUser {
-		userId, err := strconv.ParseInt(strUserId, 10, 32)
-		if err != nil {
-			return nil, errors.New("number not found")
-		}
-		usersId = append(usersId, model.Id(userId))
-	}
-	return usersId, nil
 }

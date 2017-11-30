@@ -18,16 +18,16 @@ func (cdb CacheDB) AddTransaction(transaction *model.InputTransaction) error {
 	return nil
 }
 
-func (cdb CacheDB) GetTransactions(limit int, offset int) (*[]model.MainTransaction, error) {
+func (cdb CacheDB) GetTransactions(limit int, offset int, group model.Id) (*[]model.MainTransaction, error) {
 	/* Add cache search */
 
-	return cdb.adb.getMainTransactionsPack(limit, offset)
+	return cdb.adb.getMainTransactionsPack(limit, offset, group)
 }
 
-func (cdb CacheDB) GetTransactionsByUser(user *model.User, number int) (*[]model.MainTransaction, error) {
+func (cdb CacheDB) GetTransactionsByUserId(user model.Id, number int) (*[]model.MainTransaction, error) {
 	/* Add search transaction from cache */
 
-	return cdb.adb.getMainTransactionsByUserId(user.Id)
+	return cdb.adb.getMainTransactionsByUserId(user)
 }
 
 func (cdb CacheDB) GetSubtransactionsOfTransaction(transactionId model.Id) (*[]model.Subtransaction, error) {
@@ -56,8 +56,6 @@ func (adb AppDB) addTransaction(inputTransaction *model.InputTransaction) error 
 		log.Println("addTransaction returned this message: " + err.Error())
 		return ErrInternal
 	}
-
-	defer addTX.Commit()
 
 	transactionId, err := addMainTransaction(addTX, inputTransaction)
 	if err != nil {
@@ -97,6 +95,8 @@ func (adb AppDB) addTransaction(inputTransaction *model.InputTransaction) error 
 		return err
 	}
 
+	addTX.Commit()
+
 	return nil
 }
 
@@ -106,8 +106,6 @@ func (adb AppDB) deleteTransactionById(transactionId model.Id) error {
 		log.Println("deleteTransactionById returned this message: " + err.Error())
 		return ErrInternal
 	}
-
-	defer delTX.Commit()
 
 	err = deleteMainTransaction(delTX, transactionId)
 	if err != nil {
@@ -121,15 +119,19 @@ func (adb AppDB) deleteTransactionById(transactionId model.Id) error {
 		return err
 	}
 
+	delTX.Commit()
+
 	return nil
 }
 
-func (adb AppDB) getMainTransactionsPack(limit int, offset int) (*[]model.MainTransaction, error) {
+func (adb AppDB) getMainTransactionsPack(limit int, offset int, group model.Id) (*[]model.MainTransaction, error) {
 	rows, err := adb.db.Query(`SELECT
-		tr_id, date, source, sum, matter, comment
-		FROM app_transaction ORDER BY date
-		LIMIT $1 OFFSET $2`,
-		limit, offset)
+		tr_id, gr_id, date, source, sum, matter, comment
+		FROM app_transaction
+		WHERE gr_id = $1
+		ORDER BY date
+		LIMIT $2 OFFSET $3`,
+		group, limit, offset)
 	if err != nil {
 		log.Println("getMainTransactionsPack returned this message: " + err.Error())
 		return nil, ErrInternal
@@ -141,7 +143,9 @@ func (adb AppDB) getMainTransactionsPack(limit int, offset int) (*[]model.MainTr
 	for rows.Next() {
 		var transaction model.MainTransaction
 
-		if err := rows.Scan(&transaction.Id,
+		if err := rows.Scan(
+			&transaction.Id,
+			&transaction.Group,
 			&transaction.Date,
 			&transaction.Source,
 			&transaction.Sum,
@@ -164,6 +168,7 @@ func (adb AppDB) getMainTransactionsPack(limit int, offset int) (*[]model.MainTr
 func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (model.Id, error) {
 	_, err := tx.Exec(`
 		INSERT INTO app_transaction(
+		gr_id
 		date,
 		source,
 		sum,
@@ -174,8 +179,10 @@ func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (m
 		$1,
 		$2,
 		$3,
-		$4
+		$4,
+		$5
 		);`,
+		inputTransaction.Group,
 		inputTransaction.Source,
 		inputTransaction.Sum,
 		inputTransaction.Matter,
@@ -202,7 +209,7 @@ func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (m
 func (adb AppDB) getMainTransactionsByUserId(sourceId model.Id) (*[]model.MainTransaction, error) {
 	var transactionsOfUser []model.MainTransaction
 
-	rows, err := adb.db.Query(`SELECT tr_id, date, sum, matter, comment
+	rows, err := adb.db.Query(`SELECT tr_id, gr_id, date, sum, matter, comment
 		FROM app_transaction WHERE source=$1`, sourceId)
 	if err != nil {
 		log.Println("getMainTransactionsByUserId returned this message: " + err.Error())
@@ -215,6 +222,7 @@ func (adb AppDB) getMainTransactionsByUserId(sourceId model.Id) (*[]model.MainTr
 
 		err = rows.Scan(
 			&currentTransaction.Id,
+			&currentTransaction.Group,
 			&currentTransaction.Date,
 			&currentTransaction.Sum,
 			&currentTransaction.Matter,
