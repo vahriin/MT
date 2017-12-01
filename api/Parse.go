@@ -86,14 +86,14 @@ func parseUser(strUser []string) ([]model.Id, error) {
 
 func getGroupsForm(req *http.Request) (model.Id, bool, error) {
 	req.ParseForm()
-	form1, ok := req.Form["id"]
+	form1, ok := req.Form["user_id"]
 	if !ok {
-		return 0, false, errors.New("\"id\" parameter not found")
+		return 0, false, errors.New("\"user_id\" parameter not found")
 	}
 
 	id, err := strconv.ParseInt(form1[0], 10, 32)
 	if err != nil {
-		return 0, false, errors.New("no number in \"id\"")
+		return 0, false, errors.New("no number in \"user_id\"")
 	}
 
 	form2, ok := req.Form["creator"]

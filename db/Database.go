@@ -85,8 +85,8 @@ func createTables(db *sql.DB) {
 	createUserGroup := `
 
 	CREATE TABLE IF NOT EXISTS app_user_group (
-	user_id integer UNIQUE NOT NULL,
-	gr_id integer UNIQUE NOT NULL
+	user_id integer NOT NULL,
+	gr_id integer NOT NULL
 	);`
 
 	createTransaction := `

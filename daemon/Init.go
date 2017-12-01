@@ -44,6 +44,7 @@ func Run(config *config.AppConfig) {
 	http.Handle("/transactions", api.TransactionsHandler(&AppDatabase))
 	http.Handle("/transaction-id", api.TransactionIdHandler(&AppDatabase))
 	http.Handle("/user", api.UserHandler(&AppDatabase))
+	http.Handle("/groups", api.GroupsHandler(&AppDatabase))
 
 	/* end of handler init */
 

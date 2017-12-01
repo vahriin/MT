@@ -15,6 +15,10 @@ func (cdb CacheDB) AddGroup(group *model.Group) error {
 	return nil
 }
 
+func (cdb CacheDB) AddUserToGroup(user model.Id, group model.Id) error {
+	return cdb.adb.addUserToGroup(user, group)
+}
+
 func (cdb CacheDB) GetGroupsByUser(userId model.Id) (*[]model.Group, error) {
 	/* cache*/
 
@@ -45,14 +49,21 @@ func (adb AppDB) addGroup(group *model.Group) error {
 		return ErrInternal
 	}
 
-	if _, err := addTx.Exec(`INSERT INTO app_group (name, creator) VALUES ($1, $2);`,
+	if _, err := addTx.Exec(`INSERT INTO app_group (name, creator_id) VALUES ($1, $2);`,
 		group.Name, group.Creator); err != nil {
 		log.Println("addGroup returned this message: " + err.Error())
 		addTx.Rollback()
 		return ErrInternal
 	}
 
-	if _, err := addTx.Exec(`INSERT INTO app_user_group (user_id, group_id) VALUES ($1, $2);`,
+	row := addTx.QueryRow("SELECT MAX(id) FROM app_group;")
+	if err := row.Scan(&group.Id); err != nil {
+		log.Println("addGroup returned this message: " + err.Error())
+		addTx.Rollback()
+		return ErrInternal
+	}
+
+	if _, err := addTx.Exec(`INSERT INTO app_user_group (user_id, gr_id) VALUES ($1, $2);`,
 		group.Creator, group.Id); err != nil {
 		log.Println("addGroup returned this message: " + err.Error())
 		addTx.Rollback()
@@ -61,6 +72,15 @@ func (adb AppDB) addGroup(group *model.Group) error {
 
 	addTx.Commit()
 
+	return nil
+}
+
+func (adb AppDB) addUserToGroup(user model.Id, group model.Id) error {
+	_, err := adb.db.Exec("INSERT INTO app_user_group (user_id, gr_id) VALUES($1, $2);", user, group)
+	if err != nil {
+		log.Println("addUserToGroup returned this message: " + err.Error())
+		return ErrInternal
+	}
 	return nil
 }
 
