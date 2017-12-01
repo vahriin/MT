@@ -19,6 +19,10 @@ func (cdb CacheDB) AddUserToGroup(user model.Id, group model.Id) error {
 	return cdb.adb.addUserToGroup(user, group)
 }
 
+func (cdb CacheDB) GetGroupMember(groupId model.Id) (*[]model.User, error) {
+	return cdb.adb.getGroupMembers(groupId)
+}
+
 func (cdb CacheDB) GetGroupsByUser(userId model.Id) (*[]model.Group, error) {
 	/* cache*/
 
@@ -115,19 +119,23 @@ func (adb AppDB) getGroupsByUser(id model.Id) (*[]model.Group, error) {
 	return &userGroups, nil
 }
 
-func (adb AppDB) getGroupMembers(id model.Id) (*[]model.Id, error) {
-	rows, err := adb.db.Query(`SELECT user_id FROM app_user_group WHERE group_id;`, id)
+func (adb AppDB) getGroupMembers(id model.Id) (*[]model.User, error) {
+	rows, err := adb.db.Query(`SELECT id, nick
+		FROM app_user_group
+		JOIN app_user
+		BY app_user_group.user_id = app_user.id
+		WHERE group_id = $1;`, id)
 	if err != nil {
 		return nil, ErrInternal
 	}
 
 	defer rows.Close()
 
-	var groupMembers []model.Id
+	var groupMembers []model.User
 	for rows.Next() {
-		var currentMember model.Id
+		var currentMember model.User
 
-		if err := rows.Scan(&currentMember); err != nil {
+		if err := rows.Scan(&currentMember.Id, &currentMember.Nick); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, ErrNotFound
 			} else {

@@ -48,6 +48,9 @@ func GroupsHandler(cdb *db.CacheDB) http.Handler {
 				}
 			}
 
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusOK)
+
 		} else if req.Method == http.MethodPost {
 			group := new(model.Group)
 

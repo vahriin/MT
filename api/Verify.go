@@ -25,7 +25,7 @@ type GoogleAuth struct {
 	Locale string
 }
 
-func VerifyTokenHandler(cdb db.CacheDB) http.Handler {
+func VerifyTokenHandler(cdb *db.CacheDB) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if req.Method != http.MethodPost {
 			http.Error(rw, "only POST supported", http.StatusBadRequest)
