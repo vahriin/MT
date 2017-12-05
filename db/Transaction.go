@@ -68,8 +68,7 @@ func (adb AppDB) addTransaction(inputTransaction *model.InputTransaction) error 
 
 	for i, target := range inputTransaction.Targets {
 		subtransaction.Proportion = inputTransaction.Proportions[i]
-		subtransaction.Sum = roundMoney(
-			float64(subtransaction.Proportion*inputTransaction.Sum) / float64(sumProps))
+		subtransaction.Sum = subtransaction.Proportion*inputTransaction.Sum / sumProps
 		subtransaction.Target = target
 		subtransaction.Source = inputTransaction.Source
 		subtransaction.TransactionId = transactionId
@@ -168,8 +167,8 @@ func (adb AppDB) getMainTransactionsPack(limit int, offset int, group model.Id) 
 func addMainTransaction(tx *sql.Tx, inputTransaction *model.InputTransaction) (model.Id, error) {
 	_, err := tx.Exec(`
 		INSERT INTO app_transaction(
-		gr_id
 		date,
+		gr_id,
 		source,
 		sum,
 		matter,

@@ -5,28 +5,30 @@ import (
 	"os"
 )
 
-var ApplicationConfigDir string = "moneyteam-devel/"
-var SystemConfigFile string = "system"
-var DbConfigFile string = "database"
-var ServerConfigFile = "server"
+const ApplicationConfigDir  = "moneyteam-test/"
+const SystemConfigFile = "system"
+const DbConfigFile = "database"
+const ServerConfigFile = "server"
+var PathToConfigDir = ""
 
 //var CacheConfigFile string = "cache"
 
 func ReadConfig() *AppConfig {
 	userDir := os.Getenv("HOME")
 	if checkConfigDirExist(userDir) {
-		return readConfig(userDir + "/.config/" + ApplicationConfigDir)
+		PathToConfigDir = userDir + "/.config/" + ApplicationConfigDir
+		return readConfig()
 	} else {
 		panic("No config directory")
 	}
 }
 
-func readConfig(pathToConfigDir string) *AppConfig {
+func readConfig() *AppConfig {
 	appConfig := new(AppConfig)
-	appConfig.System = readSystemConfig(pathToConfigDir + SystemConfigFile)
-	appConfig.Db = readDbConfig(pathToConfigDir + DbConfigFile)
-	appConfig.Server = readServerConfig(pathToConfigDir + ServerConfigFile)
-	//appConfig.Cache = readCacheConfig(pathToConfigDir + CacheConfigFile)
+	appConfig.System = readSystemConfig(PathToConfigDir + SystemConfigFile)
+	appConfig.Db = readDbConfig(PathToConfigDir + DbConfigFile)
+	appConfig.Server = readServerConfig(PathToConfigDir + ServerConfigFile)
+	//appConfig.Cache = readCacheConfig(PathToConfigDir + CacheConfigFile)
 	return appConfig
 }
 
@@ -47,6 +49,8 @@ func readSystemConfig(fileName string) SystemConfig {
 	if err != nil {
 		panic(err)
 	}
+
+	systemConfig.Logfile = PathToConfigDir + systemConfig.Logfile
 
 	return systemConfig
 }
@@ -79,6 +83,9 @@ func readServerConfig(fileName string) ServerConfig {
 	if err != nil {
 		panic(err)
 	}
+
+	sConfig.KeyFile = PathToConfigDir + sConfig.KeyFile
+	sConfig.CertFile = PathToConfigDir + sConfig.CertFile
 
 	return sConfig
 }

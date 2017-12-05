@@ -52,8 +52,13 @@ func GroupIdHandler(cdb *db.CacheDB) http.Handler {
 				return
 			}
 
-			if err := cdb.AddUserToGroup(userGroup.User, userGroup.Group); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			err := cdb.AddUserToGroup(userGroup.User, userGroup.Group)
+			if err != nil {
+				if err == db.ErrForbidden {
+					http.Error(rw, err.Error(), http.StatusForbidden)
+				} else {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+				}
 				return
 			}
 

@@ -6,22 +6,23 @@ import (
 	"bufio"
 	"encoding/json"
 	"github.com/vahriin/MT/model"
+	"io"
 )
 
 type GoogleAuth struct {
 	Iss string
-	Sub []byte
+	Sub string
 	Azp string
 	Aud string
-	Iat []byte
-	Exp []byte
+	Iat string
+	Exp string
 
 	Email string
 	EmailVerified bool //probably error
 	Name string
 	Picture string
-	GivenName string
-	FamilyName string
+	Given_Name string
+	Family_Name string
 	Locale string
 }
 
@@ -33,9 +34,10 @@ func VerifyTokenHandler(cdb *db.CacheDB) http.Handler {
 		}
 
 		reqReader := bufio.NewReader(req.Body)
+
 		token, err := reqReader.ReadString('\n')
-		if err != nil {
-			http.Error(rw, "token cannot be read: " + err.Error(), http.StatusInternalServerError)
+		if err != nil && err != io.EOF {
+			http.Error(rw, "token cannot be read: " + err.Error() + token, http.StatusInternalServerError)
 			return
 		}
 
@@ -64,7 +66,7 @@ func VerifyTokenHandler(cdb *db.CacheDB) http.Handler {
 		encoder := json.NewEncoder(rw)
 
 		/*probably shitcode*/
-		user, err := cdb.GetUserByGoogleId(googleAuth.Sub)
+		user, err := cdb.GetUserByGoogleId([]byte(googleAuth.Sub))
 
 		if err == nil {
 			encoder.Encode(user)
@@ -74,22 +76,22 @@ func VerifyTokenHandler(cdb *db.CacheDB) http.Handler {
 		} else if err == db.ErrNotFound {
 			gUser := new(model.GoogleUser)
 			gUser.Id = 0
-			gUser.GoogleId = googleAuth.Sub
-			gUser.Nick = googleAuth.GivenName
+			gUser.GoogleId = []byte(googleAuth.Sub)
+			gUser.Nick = googleAuth.Given_Name
 
 			if err := cdb.AddGoogleUser(gUser); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			user, _ = cdb.GetUserByGoogleId(googleAuth.Sub)
+			user, _ = cdb.GetUserByGoogleId([]byte(googleAuth.Sub))
 
 			encoder.Encode(user)
 			rw.WriteHeader(http.StatusCreated)
 			return
 
 		} else {
-			http.Error(rw, "Unexpected error", http.StatusInternalServerError)
+			http.Error(rw, "Unexpected error" + err.Error(), http.StatusInternalServerError)
 			return
 		}
 

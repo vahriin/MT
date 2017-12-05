@@ -5,7 +5,6 @@ import (
 	"errors"
 	_ "github.com/lib/pq"
 	"github.com/vahriin/MT/config"
-	"log"
 )
 
 var ErrNotFound = errors.New("db: entry not found")
@@ -60,75 +59,7 @@ func initAppDB(cfg string) (AppDB, error) {
 	if err := db.Ping(); err != nil {
 		panic(err)
 	}
-	createTables(db)
 	return AppDB{db: db}, nil
 }
 
-func createTables(db *sql.DB) {
-	//TODO: check exist and change these requests
-	createUser := `
 
-	CREATE TABLE IF NOT EXISTS app_user (
-	id serial PRIMARY KEY,
-	google_id varchar(255) UNIQUE NOT NULL,
-	nick varchar(255) NOT NULL
-	);`
-
-	createGroup := `
-
-	CREATE TABLE IF NOT EXISTS app_group (
-	id serial PRIMARY KEY,
-	name varchar(255) UNIQUE NOT NULL,
-	creator_id integer NOT NULL
-	);`
-
-	createUserGroup := `
-
-	CREATE TABLE IF NOT EXISTS app_user_group (
-	user_id integer NOT NULL,
-	gr_id integer NOT NULL
-	);`
-
-	createTransaction := `
-
-	CREATE TABLE IF NOT EXISTS app_transaction (
-	tr_id serial PRIMARY KEY,
-	gr_id integer NOT NULL,
-	date timestamp(0) without time zone NOT NULL,
-	source integer NOT NULL,
-	sum integer NOT NULL,
-	matter text NOT NULL,
-	comment text NOT NULL
-	);`
-
-	createSubtransaction := `
-
-	CREATE TABLE IF NOT EXISTS app_subtransaction (
-	tr_id integer NOT NULL,
-	source integer NOT NULL,
-	target integer NOT NULL,
-	sum integer NOT NULL,
-	proportion integer NOT NULL
-	);`
-
-	var err error
-	if _, err = db.Exec(createUser); err != nil {
-		log.Fatal("CreateUser returned this message: " + err.Error())
-	}
-
-	if _, err = db.Exec(createGroup); err != nil {
-		log.Fatal("CreateGroup returned this message: " + err.Error())
-	}
-
-	if _, err = db.Exec(createUserGroup); err != nil {
-		log.Fatal("CreateUserGroup returned this message: " + err.Error())
-	}
-
-	if _, err = db.Exec(createTransaction); err != nil {
-		log.Fatal("CreateTransaction returned this message: " + err.Error())
-	}
-
-	if _, err = db.Exec(createSubtransaction); err != nil {
-		log.Fatal("CreateSubtransaction returned this message: " + err.Error())
-	}
-}

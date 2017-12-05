@@ -35,7 +35,7 @@ func (adb AppDB) getUserById(id model.Id) (*model.User, error) {
 }
 
 func (adb AppDB) getUserByGoogleId(googleId []byte) (*model.User, error) {
-	row := adb.db.QueryRow("SELECT id, nick FROM app_user WHERE email=$1", googleId)
+	row := adb.db.QueryRow("SELECT id, nick FROM app_user WHERE google_id=$1", googleId)
 	var user model.User
 	if err := row.Scan(&user.Id, &user.Nick); err != nil {
 		switch {

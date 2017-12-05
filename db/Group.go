@@ -80,11 +80,23 @@ func (adb AppDB) addGroup(group *model.Group) error {
 }
 
 func (adb AppDB) addUserToGroup(user model.Id, group model.Id) error {
-	_, err := adb.db.Exec("INSERT INTO app_user_group (user_id, gr_id) VALUES($1, $2);", user, group)
-	if err != nil {
-		log.Println("addUserToGroup returned this message: " + err.Error())
-		return ErrInternal
+	row := adb.db.QueryRow("SELECT user_id, gr_id FROM app_user_group WHERE user_id=$1 AND gr_id=$2",
+		user, group)
+
+	var tempUser, tempGroup model.Id
+
+	err := row.Scan(&tempUser, &tempGroup)
+	if err == sql.ErrNoRows {
+		_, err = adb.db.Exec("INSERT INTO app_user_group (user_id, gr_id) VALUES($1, $2);", user, group)
+		if err != nil {
+			log.Println("addUserToGroup returned this message: " + err.Error())
+			return ErrInternal
+		}
+	} else {
+		return ErrForbidden
 	}
+
+
 	return nil
 }
 
@@ -123,9 +135,10 @@ func (adb AppDB) getGroupMembers(id model.Id) (*[]model.User, error) {
 	rows, err := adb.db.Query(`SELECT id, nick
 		FROM app_user_group
 		JOIN app_user
-		BY app_user_group.user_id = app_user.id
-		WHERE group_id = $1;`, id)
+		ON app_user_group.user_id = app_user.id
+		WHERE app_user_group.gr_id = $1;`, id)
 	if err != nil {
+		log.Println("getGroupsByCreator returned this message: " + err.Error())
 		return nil, ErrInternal
 	}
 
