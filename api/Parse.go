@@ -124,3 +124,39 @@ func getGroupIdForm(req *http.Request) (model.Id, error) {
 
 	return model.Id(int(id)), nil
 }
+
+func getStatisticsForm(req *http.Request) (model.Id, model.Id, model.Id, error) {
+	req.ParseForm()
+
+	form1, ok := req.Form["source"]
+	if !ok {
+		return 0, 0, 0, errors.New("\"source\" parameter not found")
+	}
+
+	form2, ok := req.Form["target"]
+	if !ok {
+		return 0, 0, 0, errors.New("\"target\" parameter not found")
+	}
+
+	form3, ok := req.Form["group"]
+	if !ok {
+		return 0, 0, 0, errors.New("\"group\" parameter not found")
+	}
+
+	source, err := strconv.ParseInt(form1[0], 10, 32)
+	if err != nil {
+		return 0, 0, 0, errors.New("No number in \"source\" ")
+	}
+
+	target, err := strconv.ParseInt(form2[0], 10, 32)
+	if err != nil {
+		return 0, 0, 0, errors.New("No number in \"target\" ")
+	}
+
+	group, err := strconv.ParseInt(form3[0], 10, 32)
+	if err != nil {
+		return 0, 0, 0, errors.New("No number in \"group\" ")
+	}
+
+	return model.Id(int(source)), model.Id(int(target)), model.Id(int(group)), nil
+}

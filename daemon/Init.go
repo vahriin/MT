@@ -47,6 +47,7 @@ func Run(config *config.AppConfig) {
 	http.Handle("/groups", api.GroupsHandler(&AppDatabase))
 	http.Handle("/group-id", api.GroupIdHandler(&AppDatabase))
 	http.Handle("/enter", api.VerifyTokenHandler(&AppDatabase))
+	http.Handle("/stat", api.StatisticsHandler(&AppDatabase))
 
 	/* end of handler init */
 
