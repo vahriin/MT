@@ -15,11 +15,13 @@ func StatisticsHandler(cdb *db.CacheDB) http.Handler {
 		if req.Method == http.MethodGet {
 			sourceId, targetId, groupId, err := getStatisticsForm(req)
 
+			/*untested code*/
 			sum, err := cdb.Difference(sourceId, targetId, groupId)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusNotFound)
 				return
 			}
+			/*end*/
 
 			sum0 := Sum{Sum:sum}
 

@@ -51,7 +51,7 @@ func (adb AppDB) getSubtransactionsById(transactionId model.Id) (*[]model.Subtra
 
 func (cdb CacheDB) Difference(sourceId model.Id, targetId model.Id, groupId model.Id) (int, error) {
 	row := cdb.adb.db.QueryRow(`
-		SELECT SUM(app_subtransaction.sum)
+		SELECT SUM(app_subtransaction.sum) as ssum
 		FROM app_subtransaction
 		JOIN app_transaction
 		ON app_subtransaction.tr_id = app_transaction.tr_id
@@ -62,18 +62,22 @@ func (cdb CacheDB) Difference(sourceId model.Id, targetId model.Id, groupId mode
 	var sumSource int
 	err := row.Scan(&sumSource)
 	if err != nil {
-		log.Println("Difference returned this message: " + err.Error())
-		return 0, ErrNotFound
+		sumSource = 0
 	}
 
-	row = cdb.adb.db.QueryRow("SELECT SUM(sum) FROM app_subtransaction WHERE source=$1 AND target=$2",
-		targetId, sourceId)
+	row = cdb.adb.db.QueryRow(`
+		SELECT SUM(app_subtransaction.sum) as tsum
+		FROM app_subtransaction
+		JOIN app_transaction
+		ON app_subtransaction.tr_id = app_transaction.tr_id
+		WHERE app_subtransaction.source=$1
+		AND app_subtransaction.target=$2 AND gr_id=$3`,
+		targetId, sourceId, groupId)
 
 	var sumTarget int
 	err = row.Scan(&sumTarget)
 	if err != nil {
-		log.Println("Difference returned this message: " + err.Error())
-		return 0, ErrNotFound
+		sumTarget = 0
 	}
 
 	return sumSource - sumTarget, nil

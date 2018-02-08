@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-const ApplicationConfigDir  = "moneyteam-test/"
+const ApplicationConfigDir  = "moneyteam/"
 const SystemConfigFile = "system"
 const DbConfigFile = "database"
 const ServerConfigFile = "server"
